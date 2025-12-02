@@ -7,7 +7,10 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 1. Install dependencies
 
    ```bash
-   npm install
+   npx expo install (para que se instalen todas las dependencias de expo )
+   npx expo install @react-navigation/drawer react-native-reanimated react-native-worklets ( esto es para lo del drawer )
+   npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar ( y esto para lo de la instalación del enrutado de expo)
+   
    ```
 
 2. Start the app
