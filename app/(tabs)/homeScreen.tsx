@@ -1,26 +1,24 @@
+import { articulosViewModel } from "@/src/dependencias";
 import { Articulo } from "@/src/models/articulo";
-import ArticulosServices from "@/src/services/articulosService";
-import { ArticulosViewModel } from "../../src/viewModels/articulosViewModel";
 import { Link } from "expo-router";
-import React, { useEffect, useState , useRef} from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import style from "../Styles";
 
 export default function HomeScreen() {
   const [articulos, setArticulos] = useState<Articulo[]>([]);
 
-const viewModelRef = useRef(new ArticulosViewModel(new ArticulosServices()));
-const viewModel = viewModelRef.current;
-
   useEffect(() => {
     async function cargarDatos() {
-      const datos = await viewModel.cargarArticulos();
+      const datos = await articulosViewModel.cargarArticulos();
       setArticulos(datos);
     }
     cargarDatos();
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={style.container}>
+      <Text style={style.title}>Inicio</Text>
       <FlatList
         data={articulos}
         keyExtractor={(item) => item.id.toString()}
@@ -40,12 +38,9 @@ const viewModel = viewModelRef.current;
   );
 }
 
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#f8f8f8ff",
-  },
+
  item: {
     padding: 18,
     borderRadius: 12,

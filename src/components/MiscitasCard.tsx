@@ -1,21 +1,28 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
-
-interface Props {
-  fecha: string;
-  psicologo: string;
-  estado: string;
+import { Citas } from "../models/citas";
+interface Props extends Citas {
+  colorEstado: string
 }
 
-const MiCitaCard: React.FC<Props> = ({ fecha, psicologo, estado }) => {
+export default function MiCitaCard(prop: Props) {
+  const {
+    fecha,
+    psicologo,
+    estado,
+    colorEstado
+
+  } = prop;
+
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mis Citas</Text>
       <Text style={styles.subtitle}>Gestiona tus citas con psicólogos</Text>
 
       <View style={styles.card}>
-        {/* Fecha */}
         <View style={styles.row}>
           <MaterialIcons name="event" size={22} color="#4b5563" />
           <Text style={styles.label}>
@@ -23,7 +30,7 @@ const MiCitaCard: React.FC<Props> = ({ fecha, psicologo, estado }) => {
           </Text>
         </View>
 
-        {/* Psicólogo */}
+
         <View style={styles.row}>
           <Feather name="user" size={22} color="#4b5563" />
           <Text style={styles.label}>
@@ -31,23 +38,24 @@ const MiCitaCard: React.FC<Props> = ({ fecha, psicologo, estado }) => {
           </Text>
         </View>
 
-        {/* Estado */}
         <View style={styles.row}>
-          <Feather name="check-circle" size={22} color="#22c55e" />
+          <Feather name="check-circle" size={22} color="#767676ff" />
           <Text style={styles.label}>
             <Text style={styles.bold}>Estado:</Text>
           </Text>
-
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{estado}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: colorEstado + '20' }]}>
+            <Text style={[styles.statusText, { color: colorEstado }]}>
+              {estado}
+            </Text>
           </View>
+
         </View>
       </View>
     </View>
   );
 };
 
-export default MiCitaCard;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -55,8 +63,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: "700",
-    color: "#1f2937",
+    color: "#085394",
+    fontWeight: "bold",
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: 14,

@@ -1,20 +1,15 @@
 import { Text, View, StyleSheet } from 'react-native';
-
+import style from "../Styles";
 export default function DiarioScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Esta es la vista del diario</Text>
+    <View style={style.container}>
+      <Text style={style.title}>Diario</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+ 
   text: {
     color: '#0f0d0dff',
   },

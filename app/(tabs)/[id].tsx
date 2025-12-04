@@ -1,21 +1,17 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import ArticulosServices from "../../src/services/articulosService";
-import { ArticulosViewModel } from "../../src/viewModels/articulosViewModel";
-import { Articulo } from "../../src/models/articulo";
+import { articulosViewModel } from "@/src/dependencias";
+import { Articulo } from "@/src/models/articulo";
 
 export default function ArticuloDetalle() {
     const { id } = useLocalSearchParams();
-
-    const servicio = useRef(new ArticulosServices()).current;
-    const viewModel = useRef(new ArticulosViewModel(servicio)).current;
-
     const [articulo, setArticulo] = useState<Articulo | null>(null);
+    
 
     useEffect(() => {
         if (typeof id === "string") {
-            viewModel.obtenerArticuloPorId(id).then(setArticulo);
+            articulosViewModel.obtenerArticuloPorId(id).then(setArticulo);
         }
     }, [id]);
 
