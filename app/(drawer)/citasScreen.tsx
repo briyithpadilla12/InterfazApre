@@ -23,7 +23,10 @@ export default function CitasScreen() {
         psicologo={citas.psicologo}
         estado={citas.estado}
         colorEstado={colorEstado}
+        
       />
+      
+      
     </View>
   );
 }

@@ -19,11 +19,14 @@ export function useCitasViewModel() {
         case "Pendiente":
           setColorEstado("#facc15");
           break;
-        case "Cancelada":
+        case "cancelada":
           setColorEstado("#ff0000ff");
           break;
-        case "Completada":
+        case "completada":
           setColorEstado("#3ccd25ff");
+          break;
+        case "programada":
+          setColorEstado("#0004daff");
           break;
       }
 

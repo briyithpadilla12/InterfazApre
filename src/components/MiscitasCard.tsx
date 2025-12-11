@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { View, Text, StyleSheet } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
+import { ScrollView } from "react-native";
 import { Citas } from "../models/citas";
 interface Props extends Citas {
   colorEstado: string
 }
 
 export default function MiCitaCard(prop: Props) {
+  const [data, setData] = useState<any[]>([]);
   const {
     fecha,
     psicologo,
@@ -15,43 +18,68 @@ export default function MiCitaCard(prop: Props) {
 
   } = prop;
 
+  useEffect(() => {
+    axios.get("http://healthymind10.runasp.net/api/Citas/buscar?DocumentoAprendiz=383")
+      .then(response => setData(response.data))
+      .catch(error => console.log("API error:", error));
+  }, []);
 
+  
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Mis Citas</Text>
       <Text style={styles.subtitle}>Gestiona tus citas con psicólogos</Text>
 
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <MaterialIcons name="event" size={22} color="#4b5563" />
-          <Text style={styles.label}>
-            <Text style={styles.bold}>Fecha:</Text> {fecha}
-          </Text>
-        </View>
+      {data.length > 0 ? (
+          data.map((item, index) => {
+
+            let color = "#22c55e";
+            switch (item.citEstadoCita) {
+              case "pendiente": color = "#facc15"; break;
+              case "cancelada": color = "#ff0000"; break;
+              case "completada": color = "#3ccd25"; break;
+              case "realizada": color = "#0004da"; break;
+              case "reprogramada": color = "#575802ff"; break;
+            }
+            return (
+              <View key={index} style={styles.card}>
+                <View style={styles.row}>
+                  <MaterialIcons name="event" size={22} color="#4b5563" />
+                  <Text style={styles.label}>
+                    <Text style={styles.bold}>Fecha:</Text> {item.citFechaProgramada ? item.citFechaProgramada : "----"}
+                  </Text>
+                </View>
 
 
-        <View style={styles.row}>
-          <Feather name="user" size={22} color="#4b5563" />
-          <Text style={styles.label}>
-            <Text style={styles.bold}>Psicólogo de ficha:</Text> {psicologo}
-          </Text>
-        </View>
+                <View style={styles.row}>
+                  <Feather name="user" size={22} color="#4b5563" />
+                  <Text style={styles.label}>
+                    <Text style={styles.bold}>Psicólogo de ficha:</Text> {item.psicologo.psiNombre}
+                  </Text>
+                </View>
 
-        <View style={styles.row}>
-          <Feather name="check-circle" size={22} color="#767676ff" />
-          <Text style={styles.label}>
-            <Text style={styles.bold}>Estado:</Text>
-          </Text>
-          <View style={[styles.statusBadge, { backgroundColor: colorEstado + '20' }]}>
-            <Text style={[styles.statusText, { color: colorEstado }]}>
-              {estado}
-            </Text>
-          </View>
+                <View style={styles.row}>
+                  <Feather name="check-circle" size={22} color="#767676ff" />
+                  <Text style={styles.label}>
+                    <Text style={styles.bold}>Estado:</Text>
+                  </Text>
+                  <View style={[styles.statusBadge, { backgroundColor: colorEstado + '20' }]}>
+                    <Text style={[styles.statusText, { color: /*colorEstado*/ color }]}>
+                      {item.citEstadoCita}
+                    </Text>
+                  </View>
 
-        </View>
-      </View>
-    </View>
+                </View>
+              </View>
+              )
+            })
+        ) : (
+          <Text>Cargando...</Text>
+)}
+
+      
+    </ScrollView>
   );
 };
 
@@ -75,6 +103,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     padding: 20,
+    marginBottom: 30,
     borderRadius: 15,
     borderWidth: 1,
     borderColor: "#e5e7eb",
