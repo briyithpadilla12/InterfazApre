@@ -2,7 +2,6 @@ import { Link } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Feather from '@expo/vector-icons/Feather';
-import AntDesign from '@expo/vector-icons/AntDesign';
 import Accordion from '@/src/components/AcordionConfi';
 
 export default function ConfiguracionScreen() {

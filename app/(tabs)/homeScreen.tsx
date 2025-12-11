@@ -2,8 +2,8 @@ import { articulosViewModel } from "@/src/dependencias";
 import { Articulo } from "@/src/models/articulo";
 import { Link } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Text, View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
-import style from "../Styles";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import style from "../../src/components/Styles";
 
 export default function HomeScreen() {
   const [articulos, setArticulos] = useState<Articulo[]>([]);

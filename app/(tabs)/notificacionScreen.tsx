@@ -1,5 +1,5 @@
-import { Text, View, StyleSheet } from 'react-native';
-import style from "../Styles";
+import { StyleSheet, Text, View } from 'react-native';
+import style from "../../src/components/Styles";
 
 export default function NotificacionScreen() {
   return (
