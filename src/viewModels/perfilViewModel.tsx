@@ -12,7 +12,7 @@ export function usePerfilViewModel() {
     cargarPerfil();
   }, []);
 
-  // 🔹 GET
+  //  GET
   const cargarPerfil = async () => {
     try {
       setCargando(true);
@@ -25,7 +25,7 @@ export function usePerfilViewModel() {
     }
   };
 
-  // 🔹 PUT
+  //  PUT
   const guardarPerfil = async () => {
     if (!perfil) return;
 
@@ -42,7 +42,7 @@ export function usePerfilViewModel() {
     }
   };
 
-  // 🔹 actualizar campos desde la vista
+  //  actualizar campos desde la vista
   const actualizarCampo = <K extends keyof PerfilAprendiz>(
     campo: K,
     valor: PerfilAprendiz[K]
