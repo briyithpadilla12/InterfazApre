@@ -9,7 +9,7 @@ const api = axios.create({
 });
 
 const perfilAprendizServicio = {
-  // 🔹 GET PERFIL
+  
   async obtenerPerfil(): Promise<PerfilAprendiz> {
     const { data } = await api.get("/Aprendiz");
 
@@ -42,7 +42,7 @@ const perfilAprendizServicio = {
     };
   },
 
-  // 🔹 PUT PERFIL (CORRECTO)
+  
   async actualizarPerfil(
     idEditar: number,
     perfil: PerfilAprendiz
