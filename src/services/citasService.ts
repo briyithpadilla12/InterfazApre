@@ -6,7 +6,6 @@ class CitasServices {
             fecha: "13 de noviembre",
             psicologo: "camilo",
             estado: "Pendiente"
-            
         }
     }
 }

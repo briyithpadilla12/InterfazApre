@@ -1,20 +1,69 @@
-import { Perfil } from "../models/perfil";
+import axios from "axios";
+import { PerfilAprendiz } from "@/src/models/perfil";
 
-class PerfilService {
-  async obtenerPerfil(): Promise<Perfil> {
-    
+const api = axios.create({
+  baseURL: "http://healthymind10.runasp.net/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const perfilAprendizServicio = {
+  // 🔹 GET PERFIL
+  async obtenerPerfil(): Promise<PerfilAprendiz> {
+    const { data } = await api.get("/Aprendiz");
+
+    const aprendiz = data[0]; // temporal, sin auth
+
     return {
-      nombre: "Jean Carlos Coronell",
-      rol: "APRENDIZ",
-      programa: "ADSO NO.2998937",
-      correoPersonal: "jeancoronell@gmail.com",
-      correoSena: "JeanCoronell@soy.sena.edu.com",
-      numeroID: "ID-1010006601",
-      direccion: "Carrera 11 #25A-58",
-      municipio: "Malambo",
-      telefono: 3242010289,
-    };
-  }
-}
+      codigo: aprendiz.codigo,
+      fechaCreacion: aprendiz.fechaCreacion,
+      tipoDocumento: aprendiz.tipoDocumento,
+      numeroDocumento: aprendiz.nroDocumento,
+      fechaNacimiento: aprendiz.fechaNacimiento,
 
-export default new PerfilService();
+      nombreCompleto: `${aprendiz.nombres.primerNombre} ${aprendiz.nombres.segundoNombre} ${aprendiz.apellidos.primerApellido} ${aprendiz.apellidos.segundoApellido}`,
+      direccion: aprendiz.ubicacion.direccion,
+
+      telefono: aprendiz.contacto.telefono,
+      correoInstitucional: aprendiz.contacto.correoInstitucional,
+      correoPersonal: aprendiz.contacto.correoPersonal,
+
+      acudienteNombre: aprendiz.contacto.acudiente.acudienteNombre,
+      acudienteApellido: aprendiz.contacto.acudiente.acudienteApellido,
+      acudienteTelefono: aprendiz.contacto.acudiente.acudienteTelefono,
+
+      estadoAprendiz: aprendiz.estadoAprendiz.estAprNombre,
+
+      eps: aprendiz.eps,
+      patologia: aprendiz.patologia,
+      tipoPoblacion: aprendiz.tipoPoblacion,
+      estadoRegistro: aprendiz.estadoRegistro,
+    };
+  },
+
+  // 🔹 PUT PERFIL (CORRECTO)
+  async actualizarPerfil(
+    idEditar: number,
+    perfil: PerfilAprendiz
+  ): Promise<void> {
+    const payload = {
+      telefono: perfil.telefono,
+      correoPersonal: perfil.correoPersonal,
+      direccion: perfil.direccion,
+      eps: perfil.eps,
+      patologia: perfil.patologia,
+      tipoPoblacion: perfil.tipoPoblacion,
+
+      acudiente: {
+        nombre: perfil.acudienteNombre,
+        apellido: perfil.acudienteApellido,
+        telefono: perfil.acudienteTelefono,
+      },
+    };
+
+    await api.put(`/Aprendiz/editar/${idEditar}`, payload);
+  },
+};
+
+export default perfilAprendizServicio;

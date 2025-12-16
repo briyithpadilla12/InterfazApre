@@ -1,10 +1,15 @@
 import { Link } from 'expo-router';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet , Pressable} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Feather from '@expo/vector-icons/Feather';
 import Accordion from '@/src/components/AcordionConfi';
+import EditarPerfilCard from '@/src/components/EditarPerfilCard';
+import ModalEliCuenta from "@/src/components/ModalEliCuenta";
+import React, { useState } from "react";
 
 export default function ConfiguracionScreen() {
+
+   const [mostrarModal , setMostrarModal] = useState(false)
   return (
    <ScrollView>
   <View style={styles.container}>
@@ -14,8 +19,17 @@ export default function ConfiguracionScreen() {
       title="Perfil"
       icon={<Feather name="user" size={24} color="#085394" />}
     >
-      <Link href="/" ><Text>Editar información personal</Text></Link>
-      <Link href="/"><Text>Eliminar cuenta</Text></Link>
+      <Link href="/editarPerfil" ><Text>Editar información personal</Text></Link>
+        <View>
+      <Pressable onPress={() => setMostrarModal(true)}>
+        <Text>Eliminar cuenta</Text>
+      </Pressable>
+
+      <ModalEliCuenta
+        visible={mostrarModal}
+        onClose={() => setMostrarModal(false)}
+      />
+    </View>
     </Accordion>
 
     <Accordion

@@ -1,40 +1,49 @@
-import { Perfil } from "@/src/models/perfil";
-import { View, Text, StyleSheet} from "react-native"
+import { View, Text, StyleSheet } from "react-native";
+import Feather from "@expo/vector-icons/Feather";
+import { Link } from "expo-router";
 
-interface Props extends Perfil {}
+interface PerfilCardProps {
+  nombreCompleto: string;
+  correoPersonal: string;
+  correoInstitucional: string;
+  numeroDocumento: string;
+  direccion: string;
+  telefono: string
+}
 
-export default function PerfilCard(props: Props) {
-  const {
-    nombre,
-    rol,
-    programa,
-    correoPersonal,
-    correoSena,
-    numeroID,
-    direccion,
-    municipio,
-    telefono,
-  } = props;
+export default function PerfilCard({
+  nombreCompleto,
+  correoPersonal,
+  correoInstitucional,
+  numeroDocumento,
+  direccion,
+  telefono
+ 
+}: PerfilCardProps) {
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mi Perfil</Text>
 
+      
+
       <View style={styles.card}>
         <View style={styles.infoSection}>
-          <Text style={styles.name}>{nombre}</Text>
-          <Text style={styles.role}>{rol}</Text>
-          <Text style={styles.program}>{programa}</Text>
+          <Text style={styles.name}>{nombreCompleto}</Text>
 
           <Text style={styles.item}>{correoPersonal}</Text>
-          <Text style={styles.item}>{correoSena}</Text>
-          <Text style={styles.item}>{numeroID}</Text>
+          <Text style={styles.item}>{correoInstitucional}</Text>
+          <Text style={styles.item}>{numeroDocumento}</Text>
           <Text style={styles.item}>{direccion}</Text>
-          <Text style={styles.item}>{municipio}</Text>
+          <Text style={styles.item}>{telefono}</Text>
+    
 
           <View style={styles.separator} />
+          <Link asChild href={"/editarPerfil"}>
+        <Feather name="edit" size={24} color="#085394" />
+      </Link>
 
-          <Text style={styles.phone}>Cel. {telefono}</Text>
+
         </View>
       </View>
     </View>

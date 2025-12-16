@@ -1,11 +1,25 @@
-export interface Perfil {
-  nombre: string;
-  rol: string;
-  programa: string;
-  correoPersonal: string;
-  correoSena: string;
-  numeroID: string;
+export interface PerfilAprendiz {
+  codigo: number;
+  fechaCreacion: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  fechaNacimiento: string;
+
+  nombreCompleto: string;
   direccion: string;
-  municipio: string;
-  telefono: number;
+
+  telefono: string;
+  correoInstitucional: string;
+  correoPersonal: string;
+
+  acudienteNombre: string;
+  acudienteApellido: string;
+  acudienteTelefono: string;
+
+  estadoAprendiz: string;
+
+  eps: string;
+  patologia: string;
+  tipoPoblacion: string;
+  estadoRegistro: string;
 }

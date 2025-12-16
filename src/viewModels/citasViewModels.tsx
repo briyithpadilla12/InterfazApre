@@ -13,26 +13,32 @@ export function useCitasViewModel() {
 
       const data = await CitasService.ObtenerCitas();
       setCitas(data);
-     
 
       switch (data.estado) {
         case "Pendiente":
-          setColorEstado("#facc15");
+          setColorEstado("#f58600ff");
           break;
+
         case "cancelada":
           setColorEstado("#ff0000ff");
           break;
+
         case "completada":
           setColorEstado("#3ccd25ff");
           break;
+
         case "programada":
           setColorEstado("#0004daff");
+          break;
+
+        default:
+          setColorEstado("#808080ff");
           break;
       }
 
       setCargando(false);
     } catch (error) {
-      console.log("error al cargar las citas");
+      console.log("error al cargar las citas", error);
       setCargando(false);
     }
   };
