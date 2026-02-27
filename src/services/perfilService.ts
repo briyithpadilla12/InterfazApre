@@ -4,6 +4,7 @@ import api from "./apiCliente";
 
 
 const perfilAprendizServicio = {
+
   async obtenerPerfil(): Promise<PerfilAprendiz> {
     try {console.log("HEADERS:", api.defaults.headers.common); 
       // Se asume que el token ya está en el header Authorization gracias a setAuthToken

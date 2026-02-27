@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { PerfilAprendiz } from "@/src/models/perfil";
 import perfilAprendizServicio from "@/src/services/perfilService";
+import { useEffect, useState } from "react";
 
 export function usePerfilViewModel() {
   const [perfil, setPerfil] = useState<PerfilAprendiz | null>(null);
@@ -12,7 +12,7 @@ export function usePerfilViewModel() {
     cargarPerfil();
   }, []);
 
- 
+
   const cargarPerfil = async () => {
     try {
       setCargando(true);
@@ -25,7 +25,7 @@ export function usePerfilViewModel() {
     }
   };
 
- 
+
   const guardarPerfil = async () => {
     if (!perfil) return;
 
@@ -42,7 +42,7 @@ export function usePerfilViewModel() {
     }
   };
 
-  
+
   const actualizarCampo = <K extends keyof PerfilAprendiz>(
     campo: K,
     valor: PerfilAprendiz[K]
