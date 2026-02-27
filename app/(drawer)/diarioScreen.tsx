@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import style from "../../src/components/Styles";
+import style from "@/src/components/Styles";
 export default function DiarioScreen() {
   return (
     <View style={style.container}>

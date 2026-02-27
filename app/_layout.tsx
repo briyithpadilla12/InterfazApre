@@ -1,29 +1,29 @@
-import { Drawer } from "expo-router/drawer";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import DrawerPersonalizado from "@/src/components/DrawerPersonalizado";
+import { Stack } from "expo-router";
+import { useAuth } from "@/src/context/authContext";
+import { AuthProvider } from "@/src/context/authContext";
+
+function RootNavigation() {
+  const { token, cargando } = useAuth();
+
+  if (cargando) {
+    return null; 
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      {token === null ? (
+        <Stack.Screen name="index" />
+      ) : (
+        <Stack.Screen name="(drawer)" />
+      )}
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer
-        drawerContent={(props) => <DrawerPersonalizado {...props} />}
-        screenOptions={{
-          headerShown: true,
-          headerTitle: "",
-          drawerPosition: "left",
-          drawerLabelStyle: { fontSize: 16, fontWeight: "500" },
-          headerStyle: { height: 60 },
-          drawerStyle: {
-            backgroundColor: "#ffffff",
-            width: 240,
-          },
-        }}
-      >
-        
-        
-
-        
-      </Drawer>
-    </GestureHandlerRootView>
+    <AuthProvider>
+      <RootNavigation />
+    </AuthProvider>
   );
 }

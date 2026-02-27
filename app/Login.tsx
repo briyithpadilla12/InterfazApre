@@ -1,119 +1,164 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Pressable } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import { Link, Stack } from 'expo-router';
+import { Link } from "expo-router";
+import { useInicioSesionViewModel } from "@/src/viewModels/inicioSesionViewModel";
+import { useRouter } from "expo-router";
+import ModalRecuperarContra from "@/src/components/ModalRecuperarContra";
+ 
+  
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
 
+export default function PantallaInicioSesion() {
+  const [correo, setCorreo] = useState("");
+  const [contraseña, setContraseña] = useState("");
+  const [mostrarContraseña, setMostrarContraseña] = useState(false);
+  const {error, cargando, iniciarSesion} = useInicioSesionViewModel()
+   const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+  const abrirModal = () => {
+    setModalVisible(true);
+  };
+
+  const cerrarModal = () => {
+    setModalVisible(false);
+  };
+
+const router = useRouter();
+ const Userlogueado = async () => {
+  try {
+    const token = await iniciarSesion({
+      CorreoPersonal: correo,
+      Password: contraseña
+    });
+
+    console.log("LOGIN EXITOSO. TOKEN:", token);
+     router.replace("/(drawer)");
+
+  } catch (error) {
+    console.log("Fallo login");
+  }
+};
   return (
-<>
-    <Stack.Screen options={{ title: 'Oops! Página no encontrada' ,
-        headerShown: false
-      }} />
-    <View style={styles.container}>
+    <>
 
-    
-      <View style={styles.content}>
+      <View style={styles.contenedor}>
+        <View style={styles.contenido}>
 
-        <Text style={styles.title}>Inicio de sesión</Text>
+          <Text style={styles.titulo}>Inicio de sesión</Text>
 
-        <View style={styles.registerRow}>
-          <Text style={styles.registerText}>¿Aún no tienes cuenta?</Text>
-          <TouchableOpacity>
-            <Text style={styles.registerLink}> Regístrate</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.filaRegistro}>
+            <Text style={styles.textoRegistro}>¿Aún no tienes cuenta?</Text>
+            <Link asChild href={"/Registro"}>
+              <TouchableOpacity>
+                <Text style={styles.enlaceRegistro}
+                > Regístrate</Text>
+              </TouchableOpacity></Link>
+          </View>
 
-    
-        <Text style={styles.label}>Correo electrónico</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Ingresa tu email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-
-     
-        <Text style={styles.label}>Contraseña </Text>
-        <View style={styles.passwordContainer}>
+          <Text style={styles.etiqueta}>Correo electrónico</Text>
           <TextInput
-            style={styles.passwordInput}
-            placeholder="Ingresa tu contraseña"
-            secureTextEntry={!showPass}
-            value={password}
-            onChangeText={setPassword}
+            style={styles.input}
+            placeholder="Ingresa tu correo"
+            value={correo}
+            onChangeText={setCorreo}
+            keyboardType="email-address"
           />
-          <TouchableOpacity onPress={() => setShowPass(!showPass)}>
-            <Feather name={showPass ? "eye-off" : "eye"} size={22} color="gray" />
-          </TouchableOpacity>
-        </View>
 
-        <TouchableOpacity>
-          <Text style={styles.forgotText}>¿Olvidaste la contraseña?</Text>
-        </TouchableOpacity>
+          <Text style={styles.etiqueta}>Contraseña</Text>
+          <View style={styles.contenedorContraseña}>
+            <TextInput
+              style={styles.inputContrasena}
+              placeholder="Ingresa tu contraseña"
+              secureTextEntry={!mostrarContraseña}
+              value={contraseña}
+              onChangeText={setContraseña}
+            />
+            <TouchableOpacity
+              onPress={() => setMostrarContraseña(!mostrarContraseña)}
+            >
+              <Feather
+                name={mostrarContraseña ? "eye" : "eye-off"}
+                size={22}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
 
-       
-       <Link href="/(tabs)/homeScreen" asChild>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Acceder</Text>
-        </TouchableOpacity>
-        </Link>
-
-     
-        <Text style={styles.legal}>
-          Al registrarse, acepta los{" "}
-          <Text style={styles.link}>Términos de servicio</Text> y la{" "}
-          <Text style={styles.link}>Política de privacidad</Text>.
+         <Pressable  onPress={abrirModal}>
+        <Text style={styles.textoOlvido}>
+          ¿Olvidaste tu contraseña?
         </Text>
+      </Pressable>
 
+      <ModalRecuperarContra
+        visible={modalVisible}
+        onClose={cerrarModal}
+      />
+
+          
+            <Pressable style={styles.boton}
+            onPress={Userlogueado}
+            >
+              <Text style={styles.textoBoton}>Acceder</Text>
+            </Pressable >
+        
+             {error && (
+          <Text style={{ color: "red", marginTop: 10 }}>
+            {error}
+          </Text>
+        )}
+          <Text style={styles.legal}>
+            Al iniciar sesión, aceptas los{" "}
+            <Text style={styles.enlace}>Términos de servicio</Text> y la{" "}
+            <Text style={styles.enlace}>Política de privacidad</Text>.
+          </Text>
+
+        </View>
       </View>
 
-    </View>
-</>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  contenedor: {
     flex: 1,
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },
 
-  content: {
-    width: "90%",           
-    maxWidth: 400,          
-    
+  contenido: {
+    width: "90%",
+    maxWidth: 400,
   },
 
-  title: {
+  titulo: {
     fontSize: 28,
     fontWeight: "700",
     marginBottom: 15,
     textAlign: "center",
   },
 
-  registerRow: {
+  filaRegistro: {
     flexDirection: "row",
     justifyContent: "center",
     marginBottom: 25,
   },
-  registerText: {
+
+  textoRegistro: {
     fontSize: 15,
     color: "#555",
   },
-  registerLink: {
+
+  enlaceRegistro: {
     fontSize: 15,
     color: "#0d5bbf",
     fontWeight: "600",
   },
 
-  label: {
+  etiqueta: {
     fontSize: 15,
     fontWeight: "500",
     marginBottom: 5,
@@ -128,7 +173,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  passwordContainer: {
+  contenedorContraseña: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
@@ -137,13 +182,14 @@ const styles = StyleSheet.create({
     borderColor: "#d3d3d3",
     marginBottom: 15,
   },
-  passwordInput: {
+
+  inputContrasena: {
     flex: 1,
     paddingVertical: 12,
     fontSize: 15,
   },
 
-  forgotText: {
+  textoOlvido: {
     color: "#0d5bbf",
     textDecorationLine: "underline",
     fontSize: 14,
@@ -151,7 +197,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
 
-  button: {
+  boton: {
     backgroundColor: "#0b5ed7",
     paddingVertical: 15,
     borderRadius: 12,
@@ -162,7 +208,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
-  buttonText: {
+
+  textoBoton: {
     color: "#fff",
     fontSize: 17,
     fontWeight: "600",
@@ -175,9 +222,12 @@ const styles = StyleSheet.create({
     color: "#555",
     paddingHorizontal: 15,
   },
-  link: {
+
+  enlace: {
     color: "#0d5bbf",
     textDecorationLine: "underline",
     fontWeight: "500",
   },
 });
+
+

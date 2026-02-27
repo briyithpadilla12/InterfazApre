@@ -12,48 +12,37 @@ export default function ModalEliCuenta({
 }: ModalEliCuentaProps) {
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>
-            ¿Estás segura de eliminar tu cuenta?
-          </Text>
-           <Text style={styles.modalText}>
+      <View style={styles.fondo}>
+        <View style={styles.modal}>
+
+          <Text style={styles.titulo}>¿Eliminar cuenta?</Text>
+
+          <Text style={styles.descripcion}>
             Esta acción no se puede deshacer. Se eliminarán permanentemente:
           </Text>
-         <View style={styles.centeredView}>
-           <Text style={styles.modalText}>
-            - Tu perfil y datos personales
-          </Text>
-          <Text style={styles.modalText}>
-            - Historial de conversaciones
-          </Text>
-          <Text style={styles.modalText}>
-            - Registros del diario personal
-          </Text>
-          <Text style={styles.modalText}>
-            - Todas las configuraciones
-          </Text>
-         </View>
 
-       <View>
-           <Pressable
-            style={[styles.button, styles.buttonClose]}
-            onPress={onClose}
-          >
-            <Text style={styles.textStyle}>Cancelar</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.button, styles.buttonEliminar]}
-            onPress={onClose}
-          >
-            <Text style={styles.textStyle}>Eliminar</Text>
-          </Pressable>
-       </View>
+          <View style={styles.lista}>
+            <Text style={styles.item}>• Tu perfil y datos personales</Text>
+            <Text style={styles.item}>• Historial de conversaciones</Text>
+            <Text style={styles.item}>• Registros del diario emocional</Text>
+            <Text style={styles.item}>• Todas las configuraciones</Text>
+          </View>
+
+          <View style={styles.contenedorBotones}>
+            <Pressable style={styles.botonCancelar} onPress={onClose}>
+              <Text style={styles.textoCancelar}>Cancelar</Text>
+            </Pressable>
+
+            <Pressable style={styles.botonEliminar} onPress={onClose}>
+              <Text style={styles.textoEliminar}>Eliminar</Text>
+            </Pressable>
+          </View>
+
         </View>
       </View>
     </Modal>
@@ -61,49 +50,76 @@ export default function ModalEliCuenta({
 }
 
 const styles = StyleSheet.create({
-  centeredView: {
+  fondo: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  button: {
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-  },
-  buttonOpen: {
-    backgroundColor: '#F194FF',
-  },
-  buttonClose: {
-    backgroundColor: '#2196F3',
-  },
-   buttonEliminar: {
-    backgroundColor: '#b60b0bff',
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-
-  textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
+  modal: {
+    width: "90%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 22,
+    elevation: 6,
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
+
+  titulo: {
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 10,
+    color: "#111827",
+  },
+
+  descripcion: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+
+  lista: {
+    marginBottom: 20,
+  },
+
+  item: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 6,
+  },
+
+  contenedorBotones: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  botonCancelar: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginRight: 10,
+    alignItems: "center",
+  },
+
+  textoCancelar: {
+    color: "#374151",
+    fontWeight: "500",
+  },
+
+  botonEliminar: {
+    flex: 1,
+    backgroundColor: "#E11D48",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  textoEliminar: {
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
 });

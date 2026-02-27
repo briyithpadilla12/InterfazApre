@@ -4,6 +4,9 @@ import { View, Text, StyleSheet } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import { ScrollView } from "react-native";
 import { Citas } from "../models/citas";
+import api from "../services/apiCliente";
+
+
 interface Props extends Citas {
   colorEstado: string
 }
@@ -19,7 +22,7 @@ export default function MiCitaCard(prop: Props) {
   } = prop;
 
   useEffect(() => {
-    axios.get("http://healthymind10.runasp.net/api/Citas/buscar?DocumentoAprendiz=383")
+    api.get("http://healthymind10.runasp.net/api/Citas/buscar?DocumentoAprendiz=383")
       .then(response => setData(response.data))
       .catch(error => console.log("API error:", error));
   }, []);

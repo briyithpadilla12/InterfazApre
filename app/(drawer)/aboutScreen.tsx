@@ -1,8 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView , StyleSheet} from "react-native";
 import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
 
 export default function AboutScreen() {
+
+
+  const [añoActual, setAñoActual] = useState(new Date().getFullYear())
+
+ useEffect(() => {   
+      const año = new Date().getFullYear();
+      if (añoActual !== año) {
+        setAñoActual(año);
+      }
+      }, [añoActual]);
+
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
@@ -85,7 +97,7 @@ export default function AboutScreen() {
       </View>
 
    
-      <Text style={styles.version}>Versión 1.0.0 • SENA 2025</Text>
+      <Text style={styles.version}>Versión 1.0.0 • SENA {añoActual}</Text>
       <Text style={styles.footer}>Desarrollado con ❤️ por aprendices SENA</Text>
 
     </ScrollView>

@@ -3,7 +3,6 @@ import { Text, View, StyleSheet , Pressable} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Feather from '@expo/vector-icons/Feather';
 import Accordion from '@/src/components/AcordionConfi';
-import EditarPerfilCard from '@/src/components/EditarPerfilCard';
 import ModalEliCuenta from "@/src/components/ModalEliCuenta";
 import React, { useState } from "react";
 
@@ -36,7 +35,7 @@ export default function ConfiguracionScreen() {
       title="Privacidad y seguridad"
       icon={<Feather name="shield" size={24} color="#085394" />}
     >
-      <Link href="/" ><Text>Cambiar contraseña</Text></Link>
+      <Link href="/cambiarContra" ><Text>Cambiar contraseña</Text></Link>
     </Accordion>
 
     <Accordion
@@ -44,13 +43,6 @@ export default function ConfiguracionScreen() {
       icon={<Feather name="bell" size={24} color="#085394" />}
     >
       <Link href="/" ><Text>Sonido y vibración</Text></Link>
-    </Accordion>
-
-    <Accordion
-      title="Preferencias"
-      icon={<Feather name="sliders" size={24} color="#085394" />}
-    >
-      <Text>Tema (claro — oscuro)</Text>
     </Accordion>
 
     <Accordion

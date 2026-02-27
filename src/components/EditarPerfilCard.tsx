@@ -1,13 +1,15 @@
-import { Text, View, TextInput, StyleSheet , Button} from "react-native";
+import { Text, View, TextInput, StyleSheet, Button, Pressable } from "react-native";
 import { Link } from "expo-router";
 import Feather from '@expo/vector-icons/Feather';
+
+
 
 interface Props {
   nombreCompleto: string;
   direccion: string;
   correoPersonal: string;
-  correoInstitucional : string
-  telefono : string
+  correoInstitucional: string
+  telefono: string
 
   onCambiarDireccion: (valor: string) => void;
   onCambiarCorreoPersonal: (valor: string) => void;
@@ -27,14 +29,15 @@ export default function EditarPerfilCard({
   onCambiarCorreoInstitucional,
   onCambiarTelefono,
   onGuardar
-  
+
 }: Props) {
+
+
+
+  
   return (
     <View style={styles.card}>
-       <Link href={"/(drawer)/perfilScreen"} style={{ alignSelf: "flex-end" }} asChild>
 
-            <Feather name="arrow-left-circle" size={30} color="#085394"    />
-            </Link>
       <View style={styles.field}>
         <Text style={styles.label}>Nombre completo</Text>
         <TextInput
@@ -63,7 +66,7 @@ export default function EditarPerfilCard({
         />
       </View>
 
-       <View style={styles.field}>
+      <View style={styles.field}>
         <Text style={styles.label}>Correo Institucional</Text>
         <TextInput
           style={styles.input}
@@ -73,7 +76,7 @@ export default function EditarPerfilCard({
         />
       </View>
 
-       <View style={styles.field}>
+      <View style={styles.field}>
         <Text style={styles.label}>Teléfono</Text>
         <TextInput
           style={styles.input}
@@ -82,10 +85,38 @@ export default function EditarPerfilCard({
           onChangeText={onCambiarTelefono}
         />
       </View>
-      <Button title="Guardar" onPress={onGuardar} />
+
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 10,
+        marginBottom: 15,
+      }}>
+
+
+
+        
+        <Pressable
+          onPress={onGuardar} >
+          <Text style={{ color: "blue", fontSize: 20 }}>
+            Guardar
+          </Text>
+        </Pressable>
+
+        <Link asChild href={"/(drawer)/perfilScreen"}>
+          <Pressable>
+            <Text style={{ color: "red", fontSize: 20 }}>
+              Cancelar
+            </Text>
+          </Pressable>
+
+        </Link>
+      </View>
     </View>
   );
 }
+
 
 
 const styles = StyleSheet.create({

@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingTop: 10,
+    
   },
 
   title: {
@@ -76,6 +77,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
     alignItems: "center",
+    height: 300
   },
 
   avatarContainer: {
@@ -123,9 +125,9 @@ const styles = StyleSheet.create({
   },
 
   item: {
-    fontSize: 13,
+    fontSize: 18,
     color: "#333",
-    marginBottom: 2,
+    marginBottom: 5,
   },
 
   separator: {

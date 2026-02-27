@@ -1,6 +1,6 @@
 import {  View, StyleSheet, ActivityIndicator } from 'react-native';
-import MiCitaCard from '../../src/components/MiscitasCard';
-import { useCitasViewModel } from '../../src/viewModels/citasViewModels';
+import MiCitaCard from '@/src/components/MiscitasCard';
+import { useCitasViewModel } from '@/src/viewModels/citasViewModels';
 
 
 export default function CitasScreen() {
