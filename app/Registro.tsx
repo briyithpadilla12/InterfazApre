@@ -152,7 +152,7 @@ export default function RegistroPerfil() {
           Al registrarte acepta los Términos de servicio y la Política de privacidad
         </Text>
 
-        <Link href="/login" style={styles.login}>
+        <Link href="/Login" style={styles.login}>
           ¿Ya tienes cuenta?
         </Link>
       </View>

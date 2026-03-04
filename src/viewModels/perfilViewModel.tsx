@@ -1,27 +1,39 @@
 import { PerfilAprendiz } from "@/src/models/perfil";
 import perfilAprendizServicio from "@/src/services/perfilService";
-import { useEffect, useState } from "react";
+import { obtenerUserIdDesdeToken } from "@/src/utils/jwt";
+import { useAuth } from "@/src/context/authContext";
+import { useState } from "react";
 
 export function usePerfilViewModel() {
+  const { token } = useAuth();
   const [perfil, setPerfil] = useState<PerfilAprendiz | null>(null);
-  const [cargando, setCargando] = useState<boolean>(true);
+  const [cargando, setCargando] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState<boolean>(false);
 
-  useEffect(() => {
-    cargarPerfil();
-  }, []);
-
-
   const cargarPerfil = async () => {
+    console.log("[DEBUG PerfilViewModel] cargarPerfil llamado | token presente:", !!token);
+    const userId = obtenerUserIdDesdeToken(token);
+    console.log("[DEBUG PerfilViewModel] userId extraído del JWT:", userId);
+    if (!userId) {
+      console.log("[DEBUG PerfilViewModel] ERROR: userId es null/undefined");
+      setError("No se pudo obtener el ID del usuario");
+      setCargando(false);
+      return;
+    }
     try {
       setCargando(true);
-      const data = await perfilAprendizServicio.obtenerPerfil();
+      setError(null);
+      console.log("[DEBUG PerfilViewModel] Llamando perfilAprendizServicio.obtenerPerfil...");
+      const data = await perfilAprendizServicio.obtenerPerfil(userId);
+      console.log("[DEBUG PerfilViewModel] Perfil recibido - nombreCompleto:", data?.nombreCompleto, "| correo:", data?.correoPersonal);
       setPerfil(data);
-    } catch {
+    } catch (err) {
+      console.log("[DEBUG PerfilViewModel] ERROR en cargarPerfil:", err);
       setError("No se pudo cargar el perfil");
     } finally {
       setCargando(false);
+      console.log("[DEBUG PerfilViewModel] cargarPerfil finalizado");
     }
   };
 

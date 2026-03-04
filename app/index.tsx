@@ -1,5 +1,5 @@
 
-import PantallaInicioSesion from "./login"
+import PantallaInicioSesion from "./Login"
 
 export default function Index (){
     return(

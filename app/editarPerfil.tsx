@@ -1,20 +1,23 @@
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import EditarPerfilCard from "@/src/components/EditarPerfilCard";
-import { usePerfilViewModel } from "@/src/viewModels/perfilViewModel"
+import { usePerfilViewModel } from "@/src/viewModels/perfilViewModel";
 import { useRouter } from "expo-router";
-
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function EditarPerfilScreen() {
   const router = useRouter();
+  const { perfil, cargando, actualizarCampo, guardarPerfil, recargarPerfil } =
+    usePerfilViewModel();
 
-  const {
-    perfil,
-    cargando,
-    actualizarCampo,
-    guardarPerfil,
-  } = usePerfilViewModel();
+  useFocusEffect(
+    useCallback(() => {
+      if (!perfil) recargarPerfil();
+    }, [])
+  );
 
-  if (cargando || perfil === null) return <ActivityIndicator />;
+  if (cargando && !perfil) return <ActivityIndicator size="large" color="#085394" />;
+  if (!perfil) return <ActivityIndicator size="large" color="#085394" />;
 
   const handleGuardar = async () => {
     await guardarPerfil();

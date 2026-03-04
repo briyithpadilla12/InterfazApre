@@ -1,5 +1,15 @@
-import { Modal, StyleSheet, Text, Pressable, View, TextInput, ActivityIndicator } from "react-native";
-import { useState } from "react";
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  Pressable,
+  View,
+  TextInput,
+  ActivityIndicator,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
+import { useState, useEffect } from "react";
 import { useRecuperarContraViewModel } from "../viewModels/recuperarcontra";
 
 interface ModalRecuperarContraProps {
@@ -7,22 +17,20 @@ interface ModalRecuperarContraProps {
   onClose: () => void;
 }
 
-export default function ModalRecuperarContra({
-  visible,
-  onClose,
-}: ModalRecuperarContraProps) {
-
-  const {
-    recuperarContra,
-    cargando,
-    error,
-    exito
-  } = useRecuperarContraViewModel();
-
+export default function ModalRecuperarContra({ visible, onClose }: ModalRecuperarContraProps) {
+  const { recuperarContra, cargando, error, exito, reset } = useRecuperarContraViewModel();
   const [correoElectronico, setCorreoElectronico] = useState("");
 
+  useEffect(() => {
+    if (!visible) {
+      reset();
+      setCorreoElectronico("");
+    }
+  }, [visible, reset]);
+
   const manejarBoton = async () => {
-    await recuperarContra( correoElectronico);
+    Keyboard.dismiss();
+    await recuperarContra(correoElectronico);
   };
 
   return (
@@ -32,9 +40,9 @@ export default function ModalRecuperarContra({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={estilos.superposicion}>
-
-        <View style={estilos.contenedorModal}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={estilos.superposicion}>
+          <View style={estilos.contenedorModal}>
 
           <Text style={estilos.titulo}>
             Recuperar contraseña
@@ -47,10 +55,13 @@ export default function ModalRecuperarContra({
           <TextInput
             style={estilos.input}
             placeholderTextColor="#999"
+            placeholder="ejemplo@correo.com"
             value={correoElectronico}
             onChangeText={setCorreoElectronico}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
+            editable={!cargando}
           />
 
           <Pressable
@@ -85,9 +96,9 @@ export default function ModalRecuperarContra({
             </Text>
           )}
 
+          </View>
         </View>
-
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }

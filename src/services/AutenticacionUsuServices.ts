@@ -7,42 +7,27 @@ interface Token {
 
 const AutenticacionUsuServices = {
   async InicioSesion(credenciales: InicioSesion): Promise<string> {
-
-    console.log("Credenciales que se envían:", credenciales);
-
-    try {
-
-      const respuesta = await api.post<Token>(
-        "/Autenticacion/ValidarAprendiz",
-        credenciales
-      );  
-
-      return respuesta.data.token;
-
-    } catch (error: any) {
-
-      console.log("ERROR COMPLETO:", error.response?.data);
-      throw error;
-
+    const payload = {
+      correoPersonal: credenciales.correoPersonal.trim(),
+      password: credenciales.password,
+    };
+    const respuesta = await api.post<Token>(
+      "/Autenticacion/ValidarAprendiz",
+      payload
+    );
+    const token = respuesta.data?.token;
+    if (!token) {
+      throw new Error("El servidor no devolvió un token");
     }
+    return token;
   },
 
-
- async RecuperarContraCorreo(Correo: string): Promise<string> {
-  console.log("el correo que se envia es", Correo);
-
-  try {
+  async RecuperarContraCorreo(correo: string): Promise<string> {
     const respuesta = await api.post("/Aprendiz/recuperar-password", {
-      correo: Correo
+      correo,
     });
-
     return respuesta.data;
-
-  } catch (error: any) {
-    console.log("ERROR COMPLETO:", error.response?.data || error.message);
-    throw error;
-  }
-}
-}
+  },
+};
 
 export default AutenticacionUsuServices;

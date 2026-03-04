@@ -81,7 +81,7 @@ export default function EditarPerfilCard({
         <TextInput
           style={styles.input}
           value={telefono}
-          keyboardType="email-address"
+          keyboardType="phone-pad"
           onChangeText={onCambiarTelefono}
         />
       </View>

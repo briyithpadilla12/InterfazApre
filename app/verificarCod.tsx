@@ -23,7 +23,7 @@ export default function VerificarCodigo() {
     useEffect(() => {
         if (exito) {
             const timer = setTimeout(() => {
-                router.replace("/login");
+                router.replace("/");
             }, 1500);
 
             return () => clearTimeout(timer);

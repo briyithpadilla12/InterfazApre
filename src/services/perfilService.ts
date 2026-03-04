@@ -1,54 +1,94 @@
 import { PerfilAprendiz } from "@/src/models/perfil";
-
 import api from "./apiCliente";
 
+function safeStr(v: unknown): string {
+  return v != null && typeof v === "string" ? v : "";
+}
+
+/**
+ * Soporta dos estructuras del API:
+ * 1) Plana (PascalCase): aprNombre, aprApellido, aprCorreoPersonal, aprNroDocumento, etc.
+ * 2) Anidada: nombres.primerNombre, apellidos.primerApellido, contacto.telefono, etc.
+ */
+function mapearAprendiz(aprendiz: any): PerfilAprendiz {
+  const a = aprendiz ?? {};
+  console.log("[DEBUG PerfilService] mapearAprendiz - a.nombres:", a.nombres, "| a.contacto:", !!a.contacto, "| a.ubicacion:", !!a.ubicacion);
+
+  // Estructura plana (apr*) - según Postman /api/Aprendiz
+  const nombre1 = safeStr(a.aprNombre ?? a.primerNombre);
+  const nombre2 = safeStr(a.aprSegundoNombre ?? a.segundoNombre);
+  const apellido1 = safeStr(a.aprApellido ?? a.primerApellido);
+  const apellido2 = safeStr(a.aprSegundoApellido ?? a.segundoApellido);
+
+  // Estructura anidada (fallback)
+  const nombres = a.nombres ?? {};
+  const apellidos = a.apellidos ?? {};
+  const contacto = a.contacto ?? {};
+  const acudiente = contacto.acudiente ?? {};
+  const ubicacion = a.ubicacion ?? {};
+  const estadoApr = a.estadoAprendiz ?? {};
+
+  const p1 = nombre1 || safeStr(nombres.primerNombre);
+  const p2 = nombre2 || safeStr(nombres.segundoNombre);
+  const a1 = apellido1 || safeStr(apellidos.primerApellido);
+  const a2 = apellido2 || safeStr(apellidos.segundoApellido);
+  const nombreCompleto = [p1, p2, a1, a2].filter(Boolean).join(" ") || "—";
+
+  return {
+    codigo: a.codigo ?? a.aprCodigo ?? a.id ?? 0,
+    fechaCreacion: safeStr(a.fechaCreacion),
+    tipoDocumento: safeStr(a.aprTipoDocumento ?? a.tipoDocumento),
+    numeroDocumento: safeStr(a.aprNroDocumento ?? a.nroDocumento ?? a.numeroDocumento),
+    fechaNacimiento: safeStr(a.aprFechaNac ?? a.fechaNacimiento ?? a.fechaNac),
+
+    nombreCompleto,
+    direccion: safeStr(a.aprDireccion ?? ubicacion.direccion ?? a.direccion),
+
+    telefono: safeStr(a.aprTelefono ?? contacto.telefono ?? a.telefono),
+    correoInstitucional: safeStr(a.aprCorreoInstitucional ?? contacto.correoInstitucional ?? a.correoInstitucional),
+    correoPersonal: safeStr(a.aprCorreoPersonal ?? contacto.correoPersonal ?? a.correoPersonal),
+
+    acudienteNombre: safeStr(a.aprAcudNombre ?? acudiente.acudienteNombre ?? acudiente.acudNombre),
+    acudienteApellido: safeStr(a.aprAcudApellido ?? acudiente.acudienteApellido ?? acudiente.acudApellido),
+    acudienteTelefono: safeStr(a.aprTelefonoAcudiente ?? acudiente.acudienteTelefono ?? acudiente.acudTelefono),
+
+    estadoAprendiz: safeStr(estadoApr.estAprNombre ?? estadoApr.estadoAprendiz ?? a.estadoAprendiz),
+
+    eps: safeStr(a.aprEps ?? a.eps),
+    patologia: safeStr(a.aprPatologia ?? a.patologia),
+    tipoPoblacion: safeStr(a.aprTipoPoblacion ?? a.tipoPoblacion),
+    estadoRegistro: safeStr(a.estadoRegistro),
+  };
+}
 
 const perfilAprendizServicio = {
+  /** Obtiene el perfil del aprendiz por ID (según API: GET /api/Aprendiz/:id) */
+  async obtenerPerfil(userId: string): Promise<PerfilAprendiz> {
+    console.log("[DEBUG PerfilService] obtenerPerfil llamado con userId:", userId);
+    const { data } = await api.get(`/Aprendiz/${userId}`);
+    console.log("[DEBUG PerfilService] Respuesta cruda - es Array?", Array.isArray(data), "| tipo:", typeof data);
+    console.log("[DEBUG PerfilService] data (primeros 500 chars):", JSON.stringify(data)?.substring(0, 500));
 
-  async obtenerPerfil(): Promise<PerfilAprendiz> {
-    try {console.log("HEADERS:", api.defaults.headers.common); 
-      // Se asume que el token ya está en el header Authorization gracias a setAuthToken
-      const { data } = await api.get("/Aprendiz"); // si tu backend tiene /Aprendiz/me, mejor usar eso
-      const aprendiz = data; // aquí data ya debería ser solo el aprendiz logueado
-
-      return {
-        codigo: aprendiz.codigo,
-        fechaCreacion: aprendiz.fechaCreacion,
-        tipoDocumento: aprendiz.tipoDocumento,
-        numeroDocumento: aprendiz.nroDocumento,
-        fechaNacimiento: aprendiz.fechaNacimiento,
-
-        nombreCompleto: `${aprendiz.nombres.primerNombre} ${aprendiz.nombres.segundoNombre} ${aprendiz.apellidos.primerApellido} ${aprendiz.apellidos.segundoApellido}`,
-        direccion: aprendiz.ubicacion.direccion,
-
-        telefono: aprendiz.contacto.telefono,
-        correoInstitucional: aprendiz.contacto.correoInstitucional,
-        correoPersonal: aprendiz.contacto.correoPersonal,
-
-        acudienteNombre: aprendiz.contacto.acudiente.acudienteNombre,
-        acudienteApellido: aprendiz.contacto.acudiente.acudienteApellido,
-        acudienteTelefono: aprendiz.contacto.acudiente.acudienteTelefono,
-
-        estadoAprendiz: aprendiz.estadoAprendiz.estAprNombre,
-
-        eps: aprendiz.eps,
-        patologia: aprendiz.patologia,
-        tipoPoblacion: aprendiz.tipoPoblacion,
-        estadoRegistro: aprendiz.estadoRegistro,
-      };
-    } catch (error: any) {
-      console.log("Error al obtener los datos:", error.response?.data || error.message);
-      throw error;
+    // La API puede devolver: 1) Array [{...}], 2) Objeto directo {...}, 3) Envuelto { data: {...} }
+    let raw: any;
+    if (Array.isArray(data) && data.length > 0) {
+      raw = data[0];
+      console.log("[DEBUG PerfilService] Usando data[0] del array");
+    } else {
+      raw = data?.data ?? data?.aprendiz ?? data;
+      console.log("[DEBUG PerfilService] Usando data directo o envuelto");
     }
+    console.log("[DEBUG PerfilService] raw para mapear:", raw ? "objeto presente" : "null/undefined");
+
+    const mapeado = mapearAprendiz(raw ?? {});
+    console.log("[DEBUG PerfilService] Mapeado nombreCompleto:", mapeado.nombreCompleto, "| correo:", mapeado.correoPersonal);
+    return mapeado;
   },
 
   async actualizarPerfil(
     idEditar: number,
     perfil: PerfilAprendiz
   ): Promise<void> {
-    console.log("ID QUE ENVÍAS:", idEditar);
-    console.log("PERFIL QUE EDITAS:", perfil);
-
     const payload = {
       AprTipoDocumento: perfil.tipoDocumento,
       AprNroDocumento: perfil.numeroDocumento,
@@ -64,12 +104,7 @@ const perfilAprendizServicio = {
       AprTelefonoAcudiente: perfil.acudienteTelefono,
     };
 
-    try {
-      await api.put(`/Aprendiz/editar/${idEditar}`, payload);
-    } catch (error: any) {
-      console.log("ERROR BACKEND:", error.response?.data);
-      throw error;
-    }
+    await api.put(`/Aprendiz/editar/${idEditar}`, payload);
   }
 
 };

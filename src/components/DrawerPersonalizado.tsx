@@ -1,17 +1,23 @@
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { router } from 'expo-router';
+import { router } from "expo-router";
 import { useAuth } from "@/src/context/authContext";
+import { useState } from "react";
 
 export default function DrawerPersonalizado(props: any) {
-  
-    const { logout } = useAuth()
-  
-  
+  const { logout } = useAuth();
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
+
   const cerrarSesion = async () => {
-    await logout();
-    router.replace("/login");
+    if (cerrandoSesion) return;
+    setCerrandoSesion(true);
+    try {
+      await logout();
+      router.replace("/");
+    } finally {
+      setCerrandoSesion(false);
+    }
   };
   
 
@@ -60,9 +66,16 @@ export default function DrawerPersonalizado(props: any) {
         />
 
         <DrawerItem
-          label="Cerrar sesión"
-          icon={() => <Feather name="log-out" color="#d9534f" size={24} />}
+          label={cerrandoSesion ? "Cerrando sesión..." : "Cerrar sesión"}
+          icon={() =>
+            cerrandoSesion ? (
+              <ActivityIndicator size="small" color="#d9534f" />
+            ) : (
+              <Feather name="log-out" color="#d9534f" size={24} />
+            )
+          }
           onPress={cerrarSesion}
+          disabled={cerrandoSesion}
         />
       </View>
     </View>

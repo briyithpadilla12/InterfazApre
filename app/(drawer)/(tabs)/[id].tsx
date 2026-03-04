@@ -1,20 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, ScrollView } from "react-native";
-import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { articulosViewModel } from "@/src/dependencias";
 import { Articulo } from "@/src/models/articulo";
 import Feather from '@expo/vector-icons/Feather';
 
 export default function ArticuloDetalle() {
-    const { id } = useLocalSearchParams();
+    const { id } = useLocalSearchParams<{ id?: string }>();
+    const router = useRouter();
     const [articulo, setArticulo] = useState<Articulo | null>(null);
-    
+
+    const idValido = typeof id === "string" && id.trim() !== "";
 
     useEffect(() => {
-        if (typeof id === "string") {
-            articulosViewModel.obtenerArticuloPorId(id).then(setArticulo);
+        if (idValido) {
+            articulosViewModel.obtenerArticuloPorId(id!).then(setArticulo);
+        } else {
+            router.replace("/(drawer)/(tabs)/homeScreen");
         }
     }, [id]);
+
+    if (!idValido) {
+        return null;
+    }
 
     if (!articulo) {
         return (

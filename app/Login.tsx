@@ -1,20 +1,26 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Pressable,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+} from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useInicioSesionViewModel } from "@/src/viewModels/inicioSesionViewModel";
-import { useRouter } from "expo-router";
 import ModalRecuperarContra from "@/src/components/ModalRecuperarContra";
- 
-  
-
 
 export default function PantallaInicioSesion() {
   const [correo, setCorreo] = useState("");
   const [contraseña, setContraseña] = useState("");
   const [mostrarContraseña, setMostrarContraseña] = useState(false);
-  const {error, cargando, iniciarSesion} = useInicioSesionViewModel()
-   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const { error, cargando, iniciarSesion, limpiarError } = useInicioSesionViewModel();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const abrirModal = () => {
     setModalVisible(true);
@@ -23,37 +29,32 @@ export default function PantallaInicioSesion() {
   const cerrarModal = () => {
     setModalVisible(false);
   };
-
-const router = useRouter();
- const Userlogueado = async () => {
-  try {
-    const token = await iniciarSesion({
-      CorreoPersonal: correo,
-      Password: contraseña
-    });
-
-    console.log("LOGIN EXITOSO. TOKEN:", token);
-     router.replace("/(drawer)");
-
-  } catch (error) {
-    console.log("Fallo login");
-  }
-};
+  const router = useRouter();
+  const handleLogin = async () => {
+    Keyboard.dismiss();
+    try {
+      await iniciarSesion({
+        correoPersonal: correo.trim(),
+        password: contraseña,
+      });
+      router.replace("/comprobandoPerfil");
+    } catch {
+      // El error ya se muestra en el ViewModel
+    }
+  };
   return (
-    <>
-
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.contenedor}>
         <View style={styles.contenido}>
-
           <Text style={styles.titulo}>Inicio de sesión</Text>
 
           <View style={styles.filaRegistro}>
             <Text style={styles.textoRegistro}>¿Aún no tienes cuenta?</Text>
-            <Link asChild href={"/Registro"}>
+            <Link asChild href="/Registro">
               <TouchableOpacity>
-                <Text style={styles.enlaceRegistro}
-                > Regístrate</Text>
-              </TouchableOpacity></Link>
+                <Text style={styles.enlaceRegistro}> Regístrate</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
 
           <Text style={styles.etiqueta}>Correo electrónico</Text>
@@ -61,8 +62,14 @@ const router = useRouter();
             style={styles.input}
             placeholder="Ingresa tu correo"
             value={correo}
-            onChangeText={setCorreo}
+            onChangeText={(t) => {
+              setCorreo(t);
+              if (error) limpiarError();
+            }}
             keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!cargando}
           />
 
           <Text style={styles.etiqueta}>Contraseña</Text>
@@ -72,10 +79,15 @@ const router = useRouter();
               placeholder="Ingresa tu contraseña"
               secureTextEntry={!mostrarContraseña}
               value={contraseña}
-              onChangeText={setContraseña}
+              onChangeText={(t) => {
+                setContraseña(t);
+                if (error) limpiarError();
+              }}
+              editable={!cargando}
             />
             <TouchableOpacity
               onPress={() => setMostrarContraseña(!mostrarContraseña)}
+              disabled={cargando}
             >
               <Feather
                 name={mostrarContraseña ? "eye" : "eye-off"}
@@ -85,39 +97,35 @@ const router = useRouter();
             </TouchableOpacity>
           </View>
 
-         <Pressable  onPress={abrirModal}>
-        <Text style={styles.textoOlvido}>
-          ¿Olvidaste tu contraseña?
-        </Text>
-      </Pressable>
+          <Pressable onPress={abrirModal} disabled={cargando}>
+            <Text style={styles.textoOlvido}>¿Olvidaste tu contraseña?</Text>
+          </Pressable>
 
-      <ModalRecuperarContra
-        visible={modalVisible}
-        onClose={cerrarModal}
-      />
+          <ModalRecuperarContra visible={modalVisible} onClose={cerrarModal} />
 
-          
-            <Pressable style={styles.boton}
-            onPress={Userlogueado}
-            >
+          <Pressable
+            style={[styles.boton, cargando && styles.botonDeshabilitado]}
+            onPress={handleLogin}
+            disabled={cargando}
+          >
+            {cargando ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
               <Text style={styles.textoBoton}>Acceder</Text>
-            </Pressable >
-        
-             {error && (
-          <Text style={{ color: "red", marginTop: 10 }}>
-            {error}
-          </Text>
-        )}
+            )}
+          </Pressable>
+
+          {error && (
+            <Text style={styles.textoError}>{error}</Text>
+          )}
           <Text style={styles.legal}>
             Al iniciar sesión, aceptas los{" "}
             <Text style={styles.enlace}>Términos de servicio</Text> y la{" "}
             <Text style={styles.enlace}>Política de privacidad</Text>.
           </Text>
-
         </View>
       </View>
-
-    </>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -213,6 +221,17 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 17,
     fontWeight: "600",
+  },
+
+  botonDeshabilitado: {
+    opacity: 0.7,
+  },
+
+  textoError: {
+    color: "#dc2626",
+    fontSize: 14,
+    marginTop: 10,
+    textAlign: "center",
   },
 
   legal: {

@@ -9,6 +9,7 @@ export default function TabLayout() {
     
   return (
     <Tabs
+      initialRouteName="homeScreen"
       screenOptions={{
         tabBarShowLabel: true,
         tabBarActiveTintColor: '#009e0f',
