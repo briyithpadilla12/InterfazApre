@@ -1,4 +1,4 @@
-export interface ActualizarPerfilAprendizDTO {
+export interface ActualizarPerfilAprendiz{
   aprTipoDocumento: string;
   aprNroDocumento: string;
   aprFechaNac: string;
@@ -9,11 +9,11 @@ export interface ActualizarPerfilAprendizDTO {
   aprCorreoInstitucional: string;
   aprCorreoPersonal: string;
   aprDireccion: string;
-  aprCiudadFk: string;
+  aprCiudadFk: number;
   aprTelefono: string;
   aprEps: string;
   aprPatologia: string;
-  aprEstadoAprFk: string;
+  aprEstadoAprFk: number;
   aprTipoPoblacion: string;
   aprTelefonoAcudiente: string;
   aprAcudNombre: string;

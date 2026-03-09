@@ -1,5 +1,6 @@
 import { PerfilAprendiz } from "@/src/models/perfil";
 import api from "./apiCliente";
+import { ActualizarPerfilAprendiz } from "../models/editardatos";
 
 function safeStr(v: unknown): string {
   return v != null && typeof v === "string" ? v : "";
@@ -66,6 +67,8 @@ const perfilAprendizServicio = {
   async obtenerPerfil(userId: string): Promise<PerfilAprendiz> {
     console.log("[DEBUG PerfilService] obtenerPerfil llamado con userId:", userId);
     const { data } = await api.get(`/Aprendiz/${userId}`);
+    const IDUsuario = userId
+    console.log("este es el id del usuario ",IDUsuario)
     console.log("[DEBUG PerfilService] Respuesta cruda - es Array?", Array.isArray(data), "| tipo:", typeof data);
     console.log("[DEBUG PerfilService] data (primeros 500 chars):", JSON.stringify(data)?.substring(0, 500));
 
@@ -84,27 +87,18 @@ const perfilAprendizServicio = {
     console.log("[DEBUG PerfilService] Mapeado nombreCompleto:", mapeado.nombreCompleto, "| correo:", mapeado.correoPersonal);
     return mapeado;
   },
-
+  
   async actualizarPerfil(
-    idEditar: number,
-    perfil: PerfilAprendiz
+   id : string,
+    perfil: ActualizarPerfilAprendiz
   ): Promise<void> {
-    const payload = {
-      AprTipoDocumento: perfil.tipoDocumento,
-      AprNroDocumento: perfil.numeroDocumento,
-      AprTelefono: perfil.telefono,
-      AprCorreoPersonal: perfil.correoPersonal,
-      AprDireccion: perfil.direccion,
-      AprEps: perfil.eps,
-      AprPatologia: perfil.patologia,
-      AprTipoPoblacion: perfil.tipoPoblacion,
-
-      AprAcudNombre: perfil.acudienteNombre,
-      AprAcudApellido: perfil.acudienteApellido,
-      AprTelefonoAcudiente: perfil.acudienteTelefono,
-    };
-
-    await api.put(`/Aprendiz/editar/${idEditar}`, payload);
+    console.log("datos actualizados que se envian" )
+  
+   try {
+        await api.put(`/Aprendiz/editar/${id}`, perfil);
+   } catch (error : any) {
+       console.log("no se pudo actaulizar el perfil", error.message)
+   }
   }
 
 };

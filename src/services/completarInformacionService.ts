@@ -1,6 +1,6 @@
 import api from "./apiCliente";
 
-/** Payload para PUT /api/Aprendiz/completar-informacion según la API */
+
 export interface CompletarInformacionPayload {
   aprFechaNac: string;
   aprNombre: string;
