@@ -1,14 +1,13 @@
 export interface SolicitarCita {
-   
-    tipoCita : String
-    motivoSolicitud : string
- 
+  tipoCita: string;
+  motivoSolicitud: string;
 }
 
-export interface Citas{
-    citFechaProgramada : string 
-    citEstadoCita : string
-    psicologo : { 
-    psiNombre : string
-   }
+export interface Citas {
+  citId?: number;
+  citFechaProgramada: string;
+  citEstadoCita: string;
+  psicologo?: {
+    psiNombre: string;
+  };
 }

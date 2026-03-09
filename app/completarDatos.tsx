@@ -10,6 +10,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCompletarDatosViewModel } from "@/src/viewModels/completarDatosViewModel";
 
@@ -38,36 +39,33 @@ function renderInput(
 export default function CompletarDatosScreen() {
   const { documento } = useLocalSearchParams<{ documento: string }>();
   const router = useRouter();
-  console.log("[DEBUG CompletarDatosScreen] documento recibido:", documento, "tipo:", typeof documento);
-  const {
-    formulario,
-    actualizarCampo,
-    cargando,
-    error,
-    guardar,
-  } = useCompletarDatosViewModel(documento ?? "");
+  const { formulario, actualizarCampo, cargando, error, guardar } =
+    useCompletarDatosViewModel(documento ?? "");
 
   const handleGuardar = async () => {
     Keyboard.dismiss();
     const ok = await guardar();
     if (ok) {
-      router.replace("/(drawer)/(tabs)/homeScreen");
+      router.replace({
+        pathname: "/asignarFicha",
+        params: { documento: String(documento ?? "") },
+      });
     }
   };
 
   if (!documento?.trim()) {
     return (
-      <View style={styles.contenedor}>
+      <SafeAreaView style={styles.contenedor} edges={["top", "left", "right"]}>
         <Text style={styles.errorText}>
           No se encontró el documento. Inicia sesión nuevamente.
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.contenedor}>
+      <SafeAreaView style={styles.contenedor} edges={["top", "left", "right"]}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
@@ -110,7 +108,7 @@ export default function CompletarDatosScreen() {
             )}
           </Pressable>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 }

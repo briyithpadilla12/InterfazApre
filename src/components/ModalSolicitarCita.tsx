@@ -1,32 +1,39 @@
 import { View, Text, StyleSheet, Pressable, Modal, TextInput, ActivityIndicator } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { Feather } from "@expo/vector-icons";
-import { useCitasViewModel } from "../viewModels/citasViewModels";
 import React, { useState } from "react";
+import { SolicitarCita as SolicitarCitaType } from "../models/citas";
 
 interface ModalCitasProps {
   visible: boolean;
   onClose: () => void;
+  onSolicitar: (cita: SolicitarCitaType) => Promise<boolean>;
+  errorEnvioCita: string | null;
+  exitoEnvioCita: string | null;
+  cargandoEnvioCita: boolean;
 }
 
-export function ModalSolicitarCita({ onClose, visible }: ModalCitasProps) {
-
+export function ModalSolicitarCita({
+  onClose,
+  visible,
+  onSolicitar,
+  errorEnvioCita,
+  exitoEnvioCita,
+  cargandoEnvioCita,
+}: ModalCitasProps) {
   const [open, setOpen] = useState(false);
   const [tipoCita, setTipoCita] = useState<string>("");
   const [descripcion, setDescripcion] = useState<string>("");
 
-  const { SolicitarCita , errorEnvioCita,
-     exitoEnvioCita,
-     cargandoEnvioCita} = useCitasViewModel();
-
   const solicitarCita = async () => {
-    await SolicitarCita(
-   {
-      tipoCita : tipoCita,
-     motivoSolicitud : descripcion
-   }
-
-    )
+    if (!tipoCita.trim() || !descripcion.trim()) return;
+    const ok = await onSolicitar({
+      tipoCita: tipoCita.toLowerCase(),
+      motivoSolicitud: descripcion.trim(),
+    });
+    if (ok) {
+      onClose();
+    }
   };
    
 
@@ -53,7 +60,7 @@ export function ModalSolicitarCita({ onClose, visible }: ModalCitasProps) {
                 placeholder="Selecciona el tipo de cita"
                 editable={false}
                 pointerEvents="none"
-                value={tipoCita}
+                value={tipoCita ? tipoCita.charAt(0).toUpperCase() + tipoCita.slice(1) : ""}
                 style={styles.inputSelect}
               />
 
@@ -73,7 +80,7 @@ export function ModalSolicitarCita({ onClose, visible }: ModalCitasProps) {
               <Pressable
                 style={styles.opcion}
                 onPress={() => {
-                  setTipoCita("Presencial");
+                  setTipoCita("presencial");
                   setOpen(false);
                 }}
               >
@@ -83,7 +90,7 @@ export function ModalSolicitarCita({ onClose, visible }: ModalCitasProps) {
               <Pressable
                 style={styles.opcion}
                 onPress={() => {
-                  setTipoCita("Chat");
+                  setTipoCita("chat");
                   setOpen(false);
                 }}
               >

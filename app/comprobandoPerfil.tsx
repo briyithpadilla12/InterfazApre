@@ -5,6 +5,7 @@ import { useAuth } from "@/src/context/authContext";
 import { obtenerUserIdDesdeToken } from "@/src/utils/jwt";
 import perfilAprendizServicio from "@/src/services/perfilService";
 import { perfilRequiereCompletar } from "@/src/utils/perfilCompleto";
+import { tieneFichaAsignada } from "@/src/services/fichaService";
 
 export default function ComprobandoPerfilScreen() {
   const { token } = useAuth();
@@ -24,15 +25,26 @@ export default function ComprobandoPerfilScreen() {
       }
       try {
         const perfil = await perfilAprendizServicio.obtenerPerfil(userId);
-        if (perfilRequiereCompletar(perfil) && perfil.numeroDocumento) {
-          console.log("[DEBUG ComprobandoPerfil] Perfil incompleto, redirigiendo a completarDatos con documento:", perfil.numeroDocumento);
+        const documento = perfil.numeroDocumento ?? "";
+
+        if (perfilRequiereCompletar(perfil) && documento) {
           router.replace({
             pathname: "/completarDatos",
-            params: { documento: perfil.numeroDocumento },
+            params: { documento },
           });
-        } else {
-          router.replace("/(drawer)/(tabs)/homeScreen");
+          return;
         }
+
+        const conFicha = await tieneFichaAsignada(documento);
+        if (!conFicha && documento) {
+          router.replace({
+            pathname: "/asignarFicha",
+            params: { documento },
+          });
+          return;
+        }
+
+        router.replace("/(drawer)/(tabs)/homeScreen");
       } catch {
         router.replace("/(drawer)/(tabs)/homeScreen");
       }

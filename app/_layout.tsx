@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuth } from "@/src/context/authContext";
 import { AuthProvider } from "@/src/context/authContext";
 
@@ -30,6 +31,7 @@ function RootNavigation() {
         <>
           <Stack.Screen name="comprobandoPerfil" options={{ headerShown: false }} />
           <Stack.Screen name="completarDatos" options={{ headerShown: false }} />
+          <Stack.Screen name="asignarFicha" options={{ headerShown: false }} />
           <Stack.Screen name="(drawer)" />
         </>
       )}
@@ -39,8 +41,10 @@ function RootNavigation() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootNavigation />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootNavigation />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
