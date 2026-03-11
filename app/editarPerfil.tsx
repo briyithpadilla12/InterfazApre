@@ -1,4 +1,5 @@
 import { Text, View, TextInput, StyleSheet, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { usePerfilViewModel } from "@/src/viewModels/perfilViewModel";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -18,10 +19,18 @@ export default function EditarPerfilScreen() {
   );
 
   if (cargando && !perfil)
-    return <ActivityIndicator size="large" color="#085394" />;
+    return (
+      <SafeAreaView style={styles.wrapper} edges={["top", "left", "right"]}>
+        <ActivityIndicator size="large" color="#085394" />
+      </SafeAreaView>
+    );
 
   if (!perfil)
-    return <ActivityIndicator size="large" color="#085394" />;
+    return (
+      <SafeAreaView style={styles.wrapper} edges={["top", "left", "right"]}>
+        <ActivityIndicator size="large" color="#085394" />
+      </SafeAreaView>
+    );
 
   const handleGuardar = async () => {
     // CAMBIO: en tu ViewModel la función se llama actualizarPerfil, no guardarPerfil
@@ -31,10 +40,9 @@ export default function EditarPerfilScreen() {
   };
 
   return (
-    <ScrollView>
-      <View style={{ padding: 20 }}>
+    <SafeAreaView style={styles.wrapper} edges={["top", "left", "right"]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
-
           <View style={styles.field}>
             <Text style={styles.label}>Nombre completo</Text>
             <TextInput
@@ -139,14 +147,24 @@ export default function EditarPerfilScreen() {
               </Text>
             </Pressable>
           </View>
-
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: "#f4f6f8",
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
   card: {
     backgroundColor: "#ffffff",
     padding: 20,

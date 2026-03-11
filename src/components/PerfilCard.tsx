@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { Link } from "expo-router";
+import type { FichaCompleta } from "@/src/services/fichaService";
 
 interface PerfilCardProps {
   nombreCompleto: string;
@@ -16,6 +17,7 @@ interface PerfilCardProps {
   acudienteNombre?: string;
   acudienteApellido?: string;
   acudienteTelefono?: string;
+  ficha?: FichaCompleta | null;
 }
 
 function InfoRow({ icon, label, value }: { icon: string; label: string; value?: string }) {
@@ -45,6 +47,7 @@ export default function PerfilCard({
   acudienteNombre,
   acudienteApellido,
   acudienteTelefono,
+  ficha,
 }: PerfilCardProps) {
   console.log("[DEBUG PerfilCard] Props recibidas:", { nombreCompleto, correoPersonal, telefono });
   const docCompleto = [tipoDocumento, numeroDocumento].filter(Boolean).join(" ") || numeroDocumento;
@@ -79,6 +82,25 @@ export default function PerfilCard({
               <InfoRow icon="phone" label="Teléfono" value={acudienteTelefono} />
             </View>
           ) : null}
+
+          <View style={styles.acudienteSection}>
+            <Text style={styles.sectionTitle}>Ficha de formación</Text>
+            {ficha ? (
+              <>
+                <InfoRow icon="hash" label="Código" value={String(ficha.ficCodigo ?? "")} />
+                <InfoRow
+                  icon="book"
+                  label="Programa"
+                  value={ficha.programaFormacion?.progNombre}
+                />
+                <InfoRow icon="clock" label="Jornada" value={ficha.ficJornada} />
+                <InfoRow icon="calendar" label="Fecha inicio" value={ficha.ficFechaInicio} />
+                <InfoRow icon="calendar" label="Fecha fin" value={ficha.ficFechaFin} />
+              </>
+            ) : (
+              <Text style={styles.fichaSinAsignar}>Sin ficha asignada</Text>
+            )}
+          </View>
 
           <View style={styles.separator} />
           <Link asChild href="/editarPerfil">
@@ -180,6 +202,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#085394",
     marginBottom: 10,
+  },
+  fichaSinAsignar: {
+    fontSize: 14,
+    color: "#666",
+    fontStyle: "italic",
   },
   editButton: {
     flexDirection: "row",

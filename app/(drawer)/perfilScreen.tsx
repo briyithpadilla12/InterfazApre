@@ -2,10 +2,13 @@ import { View, ActivityIndicator, ScrollView, Text, StyleSheet } from "react-nat
 import PerfilCard from "@/src/components/PerfilCard";
 import { usePerfilViewModel } from "@/src/viewModels/perfilViewModel";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { obtenerFichaDelAprendiz } from "@/src/services/fichaService";
+import type { FichaCompleta } from "@/src/services/fichaService";
 
 export default function PerfilScreen() {
   const { perfil, cargando, error, recargarPerfil } = usePerfilViewModel();
+  const [ficha, setFicha] = useState<FichaCompleta | null>(null);
   console.log("[DEBUG PerfilScreen] render - perfil:", perfil ? "presente" : "null", "| cargando:", cargando, "| error:", error);
 
   useFocusEffect(
@@ -14,6 +17,20 @@ export default function PerfilScreen() {
       recargarPerfil();
     }, [])
   );
+
+  useEffect(() => {
+    if (!perfil?.numeroDocumento) {
+      setFicha(null);
+      return;
+    }
+    let cancelled = false;
+    obtenerFichaDelAprendiz(perfil.numeroDocumento).then((f) => {
+      if (!cancelled) setFicha(f);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [perfil?.numeroDocumento]);
 
   if (cargando && !perfil) {
     return (
@@ -68,6 +85,7 @@ export default function PerfilScreen() {
         acudienteNombre={perfil.acudienteNombre}
         acudienteApellido={perfil.acudienteApellido}
         acudienteTelefono={perfil.acudienteTelefono}
+        ficha={ficha}
       />
     </ScrollView>
   );

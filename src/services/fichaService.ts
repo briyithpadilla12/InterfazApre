@@ -52,6 +52,16 @@ function formatearLabel(f: FichaCompleta): string {
   return [codigo, programa, jornada].filter(Boolean).join(" - ");
 }
 
+/** GET /api/Ficha/:id - obtiene una ficha por su código */
+export async function obtenerFichaPorId(ficCodigo: number): Promise<FichaCompleta | null> {
+  try {
+    const { data } = await api.get<FichaCompleta>(`Ficha/${ficCodigo}`);
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** GET /api/Ficha - fichas activas (array directo) */
 export async function listarFichasActivas(): Promise<FichaCompleta[]> {
   const { data } = await api.get<FichaCompleta[]>("Ficha");
@@ -67,18 +77,49 @@ export async function buscarFichas(texto: string): Promise<FichaCompleta[]> {
   return Array.isArray(data) ? data : [];
 }
 
-/** GET /api/AprendizFicha/buscar?AprendizDocumento=X - verifica si tiene ficha asignada */
-export async function tieneFichaAsignada(documento: string): Promise<boolean> {
-  if (!documento?.trim()) return false;
+/** Respuesta de AprendizFicha/buscar - puede incluir ficha anidada */
+export interface AprendizFichaItem {
+  codigo?: number;
+  aprendiz?: { codigo?: number; fechaCreacion?: string };
+  ficha?: FichaCompleta;
+  aprFicFichaFk?: number;
+}
+
+/** GET /api/AprendizFicha/buscar?AprendizDocumento=X - obtiene fichas del aprendiz */
+export async function obtenerFichasDelAprendiz(documento: string): Promise<AprendizFichaItem[]> {
+  if (!documento?.trim()) return [];
   try {
     const { data } = await api.get("AprendizFicha/buscar", {
       params: { AprendizDocumento: documento.trim() },
     });
     const arr = Array.isArray(data) ? data : data?.items ?? data?.data ?? [];
-    return Array.isArray(arr) && arr.length > 0;
+    return Array.isArray(arr) ? arr : [];
   } catch {
-    return false;
+    return [];
   }
+}
+
+/** Obtiene la ficha de formación del aprendiz (la primera activa) para mostrar en perfil */
+export async function obtenerFichaDelAprendiz(documento: string): Promise<FichaCompleta | null> {
+  const items = await obtenerFichasDelAprendiz(documento);
+  const first = items[0];
+  if (!first) return null;
+  if (first.ficha) return first.ficha;
+  const raw = first as Record<string, unknown>;
+  const ficCodigo =
+    first.aprFicFichaFk ??
+    raw.aprFicFichaFk ??
+    raw.ficCodigo ??
+    raw.fichaCodigo ??
+    raw.FicCodigo;
+  if (typeof ficCodigo === "number") return await obtenerFichaPorId(ficCodigo);
+  return null;
+}
+
+/** GET /api/AprendizFicha/buscar?AprendizDocumento=X - verifica si tiene ficha asignada */
+export async function tieneFichaAsignada(documento: string): Promise<boolean> {
+  const arr = await obtenerFichasDelAprendiz(documento);
+  return arr.length > 0;
 }
 
 /** POST /api/AprendizFicha - vincula aprendiz (por documento) con ficha */
