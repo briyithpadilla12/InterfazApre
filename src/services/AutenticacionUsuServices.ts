@@ -1,4 +1,5 @@
 import { InicioSesion } from "../models/inicioSesion";
+import { RestablecerContra } from "../models/restablecerContra";
 import api from "./apiCliente";
 
 interface Token {
@@ -27,6 +28,13 @@ const AutenticacionUsuServices = {
       correo,
     });
     return respuesta.data;
+  },
+
+  async RestablecerContra(datos: RestablecerContra): Promise<void> {
+    await api.post("/Aprendiz/reset-password", {
+      token: datos.token.trim(),
+      nuevaPassword: datos.nuevaPassword,
+    });
   },
 };
 

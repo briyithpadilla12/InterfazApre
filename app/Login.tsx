@@ -14,6 +14,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { Link, useRouter } from "expo-router";
 import { useInicioSesionViewModel } from "@/src/viewModels/inicioSesionViewModel";
 import ModalRecuperarContra from "@/src/components/ModalRecuperarContra";
+import ModalRestablecerContra from "@/src/components/ModalRestablecerContra";
 
 export default function PantallaInicioSesion() {
   const [correo, setCorreo] = useState("");
@@ -21,6 +22,7 @@ export default function PantallaInicioSesion() {
   const [mostrarContraseña, setMostrarContraseña] = useState(false);
   const { error, cargando, iniciarSesion, limpiarError } = useInicioSesionViewModel();
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalRestablecerVisible, setModalRestablecerVisible] = useState(false);
 
   const abrirModal = () => {
     setModalVisible(true);
@@ -28,6 +30,15 @@ export default function PantallaInicioSesion() {
 
   const cerrarModal = () => {
     setModalVisible(false);
+  };
+
+  const cerrarModalRestablecer = () => {
+    setModalRestablecerVisible(false);
+  };
+
+  const alExitoEnviadoCorreo = () => {
+    setModalVisible(false);
+    setModalRestablecerVisible(true);
   };
   const router = useRouter();
   const handleLogin = async () => {
@@ -101,7 +112,16 @@ export default function PantallaInicioSesion() {
             <Text style={styles.textoOlvido}>¿Olvidaste tu contraseña?</Text>
           </Pressable>
 
-          <ModalRecuperarContra visible={modalVisible} onClose={cerrarModal} />
+          <ModalRecuperarContra
+            visible={modalVisible}
+            onClose={cerrarModal}
+            onExitoEnviado={alExitoEnviadoCorreo}
+          />
+
+          <ModalRestablecerContra
+            visible={modalRestablecerVisible}
+            onClose={cerrarModalRestablecer}
+          />
 
           <Pressable
             style={[styles.boton, cargando && styles.botonDeshabilitado]}

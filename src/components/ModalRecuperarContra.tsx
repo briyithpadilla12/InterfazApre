@@ -15,9 +15,11 @@ import { useRecuperarContraViewModel } from "../viewModels/recuperarcontra";
 interface ModalRecuperarContraProps {
   visible: boolean;
   onClose: () => void;
+  /** Se llama después de que el correo se envió con éxito y pasó un breve tiempo de espera. */
+  onExitoEnviado?: () => void;
 }
 
-export default function ModalRecuperarContra({ visible, onClose }: ModalRecuperarContraProps) {
+export default function ModalRecuperarContra({ visible, onClose, onExitoEnviado }: ModalRecuperarContraProps) {
   const { recuperarContra, cargando, error, exito, reset } = useRecuperarContraViewModel();
   const [correoElectronico, setCorreoElectronico] = useState("");
 
@@ -27,6 +29,15 @@ export default function ModalRecuperarContra({ visible, onClose }: ModalRecupera
       setCorreoElectronico("");
     }
   }, [visible, reset]);
+
+  // Tras éxito, espera breve y notifica al padre para abrir el modal de restablecer contraseña.
+  useEffect(() => {
+    if (!exito || !onExitoEnviado) return;
+    const id = setTimeout(() => {
+      onExitoEnviado();
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [exito, onExitoEnviado]);
 
   const manejarBoton = async () => {
     Keyboard.dismiss();
