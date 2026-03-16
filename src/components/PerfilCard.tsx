@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import type { FichaCompleta } from "@/src/services/fichaService";
 import Feather from "@expo/vector-icons/Feather";
 import { Link } from "expo-router";
-import type { FichaCompleta } from "@/src/services/fichaService";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface PerfilCardProps {
   nombreCompleto: string;
@@ -87,7 +87,7 @@ export default function PerfilCard({
             <Text style={styles.sectionTitle}>Ficha de formación</Text>
             {ficha ? (
               <>
-                <InfoRow icon="hash" label="Código" value={String(ficha.ficCodigo ?? "")} />
+                <InfoRow icon="hash" label="Ficha" value={String(ficha.ficCodigo ?? "")} />
                 <InfoRow
                   icon="book"
                   label="Programa"

@@ -1,28 +1,97 @@
-import { useState } from "react";
+import style from "@/src/components/Styles";
+import { PaginaDiarioResumen } from "@/src/models/paginaDiario";
+import PaginaDiarioService from "@/src/services/paginaDiarioService";
+import Feather from "@expo/vector-icons/Feather";
+import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
+  ActivityIndicator,
   Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
-import { useRouter } from "expo-router";
-import style from "@/src/components/Styles";
+
+function formatearFechaParaLista(fechaStr: string): string {
+  if (!fechaStr) return "Sin fecha";
+  const [y, m, d] = fechaStr.split("-");
+  if (d && m && y) return `${d}/${m}/${y}`;
+  return fechaStr;
+}
+
+/** Valida y prepara datos para mostrar (nunca renderizar contenido crudo de la API). */
+function prepararPaginaParaCard(pagina: PaginaDiarioResumen): PaginaDiarioResumen {
+  const titulo = typeof pagina.titulo === "string" ? pagina.titulo.trim().slice(0, 200) : "Sin título";
+  const fecha = typeof pagina.fecha === "string" ? pagina.fecha : "";
+  const emociones = Array.isArray(pagina.emociones)
+    ? pagina.emociones.filter((e) => typeof e === "string").map((e) => String(e).trim().slice(0, 50)).filter(Boolean)
+    : [];
+  return { id: pagina.id, titulo, fecha, emociones };
+}
+
+function CardPaginaResumen({ pagina }: { pagina: PaginaDiarioResumen }) {
+  const p = prepararPaginaParaCard(pagina);
+  const fechaMostrar = formatearFechaParaLista(p.fecha);
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardFecha}>{fechaMostrar}</Text>
+      <Text style={styles.cardTitulo} numberOfLines={2}>{p.titulo}</Text>
+      {p.emociones.length > 0 && (
+        <View style={styles.contenedorEmociones}>
+          {p.emociones.map((e) => (
+            <View key={e} style={styles.chipEmocion}>
+              <Text style={styles.chipTexto}>{e}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
 
 export default function DiarioScreen() {
   const router = useRouter();
-  // Por ahora: estado vacío. Después aquí irán las páginas del diario.
-  const [paginasDelDiario] = useState<unknown[]>([]);
+  const [paginasDelDiario, setPaginasDelDiario] = useState<PaginaDiarioResumen[]>([]);
+  const [cargando, setCargando] = useState(true);
   const [textoBusqueda, setTextoBusqueda] = useState("");
   const tienePaginas = paginasDelDiario.length > 0;
+
+  const cargarPaginas = useCallback(async () => {
+    setCargando(true);
+    try {
+      const listado = await PaginaDiarioService.listarActivos();
+      console.log("[DEBUG DiarioScreen.cargarPaginas] Páginas recibidas:", listado.length, "| No se filtra por diarioId en esta pantalla (no tenemos mi diaId aquí)");
+      setPaginasDelDiario(listado);
+    } catch (e) {
+      console.log("[DEBUG DiarioScreen.cargarPaginas] Error al cargar:", e);
+      setPaginasDelDiario([]);
+    } finally {
+      setCargando(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      cargarPaginas();
+    }, [cargarPaginas])
+  );
+
+  const paginasFiltradas = textoBusqueda.trim()
+    ? paginasDelDiario.filter(
+        (p) =>
+          formatearFechaParaLista(p.fecha).includes(textoBusqueda.trim()) ||
+          p.titulo.toLowerCase().includes(textoBusqueda.trim().toLowerCase())
+      )
+    : paginasDelDiario;
+  const mostrarLista = paginasFiltradas.length > 0;
 
   return (
     <View style={style.container}>
       <Text style={style.title}>Diario</Text>
 
-      {/* Barra de búsqueda por fecha */}
       <View style={styles.contenedorBusqueda}>
         <Feather name="calendar" size={20} color="#9ca3af" style={styles.iconoBusqueda} />
         <TextInput
@@ -36,10 +105,13 @@ export default function DiarioScreen() {
 
       <ScrollView
         style={styles.contenido}
-        contentContainerStyle={tienePaginas ? undefined : styles.contenidoCentrado}
+        contentContainerStyle={
+          cargando || !mostrarLista ? styles.contenidoCentrado : styles.contenidoLista
+        }
         showsVerticalScrollIndicator={false}
       >
-        {!tienePaginas && (
+        {cargando && <ActivityIndicator size="large" color="#085394" />}
+        {!cargando && !mostrarLista && (
           <View style={styles.bloqueBienvenida}>
             <View style={styles.contenedorIcono}>
               <Feather name="book-open" size={48} color="#6b7280" />
@@ -53,10 +125,13 @@ export default function DiarioScreen() {
             </Text>
           </View>
         )}
-        {/* Aquí después irán las cards cuando tengaPaginas sea true */}
+        {!cargando && mostrarLista && (
+          paginasFiltradas.map((pagina) => (
+            <CardPaginaResumen key={pagina.id} pagina={pagina} />
+          ))
+        )}
       </ScrollView>
 
-      {/* Botón flotante para crear página (lógica después) */}
       <Pressable
         style={styles.botonFlotante}
         onPress={() => router.push("/nuevaPaginaDiario")}
@@ -96,6 +171,45 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 20,
     paddingBottom: 100,
+  },
+  contenidoLista: {
+    paddingHorizontal: 20,
+    paddingBottom: 100,
+    gap: 12,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  cardFecha: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginBottom: 6,
+  },
+  cardTitulo: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111",
+    marginBottom: 8,
+  },
+  contenedorEmociones: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  chipEmocion: {
+    backgroundColor: "#e0e7ff",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  chipTexto: {
+    fontSize: 13,
+    color: "#3730a3",
   },
   bloqueBienvenida: {
     alignItems: "center",

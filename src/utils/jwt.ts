@@ -27,6 +27,7 @@ export function obtenerUserIdDesdeToken(token: string | null): string | null {
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const json = base64Decode(base64);
     const data = JSON.parse(json);
+    console.log("[DEBUG JWT] Claves del payload:", Object.keys(data));
     const nameid = data.nameid ?? data.sub ?? data.userId;
     console.log("[DEBUG JWT] nameid extraído:", nameid);
     return nameid != null ? String(nameid) : null;

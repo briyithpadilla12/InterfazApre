@@ -1,20 +1,20 @@
+import ModalRecuperarContra from "@/src/components/ModalRecuperarContra";
+import ModalRestablecerContra from "@/src/components/ModalRestablecerContra";
+import { useInicioSesionViewModel } from "@/src/viewModels/inicioSesionViewModel";
+import Feather from "@expo/vector-icons/Feather";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Keyboard,
+  Pressable,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Pressable,
-  Keyboard,
   TouchableWithoutFeedback,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
-import { Link, useRouter } from "expo-router";
-import { useInicioSesionViewModel } from "@/src/viewModels/inicioSesionViewModel";
-import ModalRecuperarContra from "@/src/components/ModalRecuperarContra";
-import ModalRestablecerContra from "@/src/components/ModalRestablecerContra";
 
 export default function PantallaInicioSesion() {
   const [correo, setCorreo] = useState("");
@@ -44,10 +44,11 @@ export default function PantallaInicioSesion() {
   const handleLogin = async () => {
     Keyboard.dismiss();
     try {
-      await iniciarSesion({
+      const token = await iniciarSesion({
         correoPersonal: correo.trim(),
         password: contraseña,
       });
+      console.log("token", token);
       router.replace("/comprobandoPerfil");
     } catch {
       // El error ya se muestra en el ViewModel
