@@ -13,7 +13,6 @@ function safeStr(v: unknown): string {
  */
 function mapearAprendiz(aprendiz: any): PerfilAprendiz {
   const a = aprendiz ?? {};
-  console.log("[DEBUG PerfilService] mapearAprendiz - a.nombres:", a.nombres, "| a.contacto:", !!a.contacto, "| a.ubicacion:", !!a.ubicacion);
 
   // Estructura plana (apr*) - según Postman /api/Aprendiz
   const nombre1 = safeStr(a.aprNombre ?? a.primerNombre);
@@ -65,26 +64,17 @@ function mapearAprendiz(aprendiz: any): PerfilAprendiz {
 const perfilAprendizServicio = {
   /** Obtiene el perfil del aprendiz por ID (según API: GET /api/Aprendiz/:id) */
   async obtenerPerfil(userId: string): Promise<PerfilAprendiz> {
-    console.log("[DEBUG PerfilService] obtenerPerfil llamado con userId:", userId);
     const { data } = await api.get(`/Aprendiz/${userId}`);
-    const IDUsuario = userId
-    console.log("este es el id del usuario ",IDUsuario)
-    console.log("[DEBUG PerfilService] Respuesta cruda - es Array?", Array.isArray(data), "| tipo:", typeof data);
-    console.log("[DEBUG PerfilService] data (primeros 500 chars):", JSON.stringify(data)?.substring(0, 500));
 
     // La API puede devolver: 1) Array [{...}], 2) Objeto directo {...}, 3) Envuelto { data: {...} }
     let raw: any;
     if (Array.isArray(data) && data.length > 0) {
       raw = data[0];
-      console.log("[DEBUG PerfilService] Usando data[0] del array");
     } else {
       raw = data?.data ?? data?.aprendiz ?? data;
-      console.log("[DEBUG PerfilService] Usando data directo o envuelto");
     }
-    console.log("[DEBUG PerfilService] raw para mapear:", raw ? "objeto presente" : "null/undefined");
 
     const mapeado = mapearAprendiz(raw ?? {});
-    console.log("[DEBUG PerfilService] Mapeado nombreCompleto:", mapeado.nombreCompleto, "| correo:", mapeado.correoPersonal);
     return mapeado;
   },
   
@@ -92,12 +82,10 @@ const perfilAprendizServicio = {
    id : string,
     perfil: ActualizarPerfilAprendiz
   ): Promise<void> {
-    console.log("datos actualizados que se envian" )
-  
    try {
         await api.put(`/Aprendiz/editar/${id}`, perfil);
    } catch (error : any) {
-       console.log("no se pudo actaulizar el perfil", error.message)
+       void error;
    }
   }
 

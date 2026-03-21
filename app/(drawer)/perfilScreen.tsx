@@ -9,11 +9,9 @@ import type { FichaCompleta } from "@/src/services/fichaService";
 export default function PerfilScreen() {
   const { perfil, cargando, error, recargarPerfil } = usePerfilViewModel();
   const [ficha, setFicha] = useState<FichaCompleta | null>(null);
-  console.log("[DEBUG PerfilScreen] render - perfil:", perfil ? "presente" : "null", "| cargando:", cargando, "| error:", error);
 
   useFocusEffect(
     useCallback(() => {
-      console.log("[DEBUG PerfilScreen] useFocusEffect - llamando recargarPerfil");
       recargarPerfil();
     }, [])
   );
@@ -59,11 +57,6 @@ export default function PerfilScreen() {
       </View>
     );
   }
-
-  console.log("[DEBUG PerfilScreen] Renderizando PerfilCard con:", {
-    nombreCompleto: perfil.nombreCompleto,
-    correoPersonal: perfil.correoPersonal,
-  });
 
   return (
     <ScrollView

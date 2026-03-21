@@ -13,11 +13,8 @@ export function usePerfilViewModel() {
   const [guardando, setGuardando] = useState<boolean>(false);
 
   const cargarPerfil = async () => {
-    console.log("[DEBUG PerfilViewModel] cargarPerfil llamado | token presente:", !!token);
     const userId = obtenerUserIdDesdeToken(token);
-    console.log("[DEBUG PerfilViewModel] userId extraído del JWT:", userId);
     if (!userId) {
-      console.log("[DEBUG PerfilViewModel] ERROR: userId es null/undefined");
       setError("No se pudo obtener el ID del usuario");
       setCargando(false);
       return;
@@ -25,16 +22,13 @@ export function usePerfilViewModel() {
     try {
       setCargando(true);
       setError(null);
-      console.log("[DEBUG PerfilViewModel] Llamando perfilAprendizServicio.obtenerPerfil...");
       const data = await perfilAprendizServicio.obtenerPerfil(userId);
-      console.log("[DEBUG PerfilViewModel] Perfil recibido - nombreCompleto:", data?.nombreCompleto, "| correo:", data?.correoPersonal);
       setPerfil(data);
     } catch (err) {
-      console.log("[DEBUG PerfilViewModel] ERROR en cargarPerfil:", err);
+      void err;
       setError("No se pudo cargar el perfil");
     } finally {
       setCargando(false);
-      console.log("[DEBUG PerfilViewModel] cargarPerfil finalizado");
     }
   };
       const actualizarCampo = (campo: keyof PerfilAprendiz, valor: string) => {
@@ -92,17 +86,13 @@ export function usePerfilViewModel() {
 
       if (!payload) return;
 
-     console.log("payload que se envía", payload);
-
       await perfilAprendizServicio.actualizarPerfil(
         perfil.codigo.toString(),
         payload
       );
 
-      console.log("Perfil actualizado correctamente");
-
     } catch (error) {
-      console.log("Error actualizando perfil", error);
+      void error;
       setError("No se pudo actualizar el perfil");
     } finally {
    

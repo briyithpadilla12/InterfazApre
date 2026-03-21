@@ -4,7 +4,8 @@ import PaginaDiarioService from "@/src/services/paginaDiarioService";
 import Feather from "@expo/vector-icons/Feather";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useDiarioViewModel } from "@/src/viewModels/diarioViewModel";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -54,24 +55,33 @@ function CardPaginaResumen({ pagina }: { pagina: PaginaDiarioResumen }) {
 
 export default function DiarioScreen() {
   const router = useRouter();
+  const { diario, asegurarDiario } = useDiarioViewModel();
   const [paginasDelDiario, setPaginasDelDiario] = useState<PaginaDiarioResumen[]>([]);
   const [cargando, setCargando] = useState(true);
   const [textoBusqueda, setTextoBusqueda] = useState("");
   const tienePaginas = paginasDelDiario.length > 0;
+  const estaCargandoPaginasRef = useRef(false);
 
   const cargarPaginas = useCallback(async () => {
+    if (estaCargandoPaginasRef.current) return;
+
+    estaCargandoPaginasRef.current = true;
     setCargando(true);
     try {
-      const listado = await PaginaDiarioService.listarActivos();
-      console.log("[DEBUG DiarioScreen.cargarPaginas] Páginas recibidas:", listado.length, "| No se filtra por diarioId en esta pantalla (no tenemos mi diaId aquí)");
+      const d = diario ?? (await asegurarDiario());
+      if (!d?.diaId) {
+        setPaginasDelDiario([]);
+        return;
+      }
+      const listado = await PaginaDiarioService.listarPorDiario(d.diaId);
       setPaginasDelDiario(listado);
     } catch (e) {
-      console.log("[DEBUG DiarioScreen.cargarPaginas] Error al cargar:", e);
       setPaginasDelDiario([]);
     } finally {
       setCargando(false);
+      estaCargandoPaginasRef.current = false;
     }
-  }, []);
+  }, [diario, asegurarDiario]);
 
   useFocusEffect(
     useCallback(() => {

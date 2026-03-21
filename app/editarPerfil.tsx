@@ -34,7 +34,6 @@ export default function EditarPerfilScreen() {
 
   const handleGuardar = async () => {
     // CAMBIO: en tu ViewModel la función se llama actualizarPerfil, no guardarPerfil
-    console.log("Botón guardar presionado");
     await actualizarPerfil();
     router.replace("/(drawer)/perfilScreen");
   };

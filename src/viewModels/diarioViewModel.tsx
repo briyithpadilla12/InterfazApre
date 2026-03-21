@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useAuth } from "@/src/context/authContext";
 import { obtenerUserIdDesdeToken } from "@/src/utils/jwt";
 import DiarioService from "../services/diarioService";
@@ -10,7 +10,7 @@ export function useDiarioViewModel() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const asegurarDiario = async (): Promise<Diario | null> => {
+  const asegurarDiario = useCallback(async (): Promise<Diario | null> => {
     const userId = obtenerUserIdDesdeToken(token);
     console.log("[DEBUG useDiarioViewModel.asegurarDiario] userId desde token:", userId, "| token presente:", !!token);
     if (!userId) {
@@ -26,11 +26,21 @@ export function useDiarioViewModel() {
       const userIdNum = Number(userId);
       const miDiario = activos.find((d) => d.diaAprendizFk === userIdNum);
       if (miDiario) {
-        console.log("[DEBUG useDiarioViewModel.asegurarDiario] Usando diario del usuario logueado, diaId:", miDiario.diaId, "diaAprendizFk:", miDiario.diaAprendizFk);
+        console.log(
+          "[DEBUG useDiarioViewModel.asegurarDiario] Usando diario del usuario logueado, diaId:",
+          miDiario.diaId,
+          "diaAprendizFk:",
+          miDiario.diaAprendizFk
+        );
         setDiario(miDiario);
         return miDiario;
       }
-      console.log("[DEBUG useDiarioViewModel.asegurarDiario] No hay diario del usuario", userIdNum, ", creando con diaAprendizFk:", userIdNum);
+      console.log(
+        "[DEBUG useDiarioViewModel.asegurarDiario] No hay diario del usuario",
+        userIdNum,
+        ", creando con diaAprendizFk:",
+        userIdNum
+      );
       const creado = await DiarioService.crearDiario({
         diaTitulo: "Mi diario emocional",
         diaAprendizFk: userIdNum,
@@ -56,7 +66,7 @@ export function useDiarioViewModel() {
     } finally {
       setCargando(false);
     }
-  };
+  }, [token]);
 
   return {
     diario,

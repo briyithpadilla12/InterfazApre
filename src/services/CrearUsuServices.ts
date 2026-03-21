@@ -8,13 +8,11 @@ import { InicioSesion } from "../models/inicioSesion";
 
 const CreaciónUsuarioServices = {
   async CrearPerfil(datos: registro): Promise<void> {
-    console.log("DATOS QUE SE ENVÍAN:", datos);
     try {
       await api.post("/Aprendiz/registro-inicial", datos)
 
     }
     catch (error: any) {
-      console.log("ERROR COMPLETO:", error.response?.data);
       throw error;
     }
   },
@@ -25,18 +23,15 @@ const CreaciónUsuarioServices = {
       return response.data;
     }
     catch (error: any) {
-      console.log("ERROR COMPLETO:", error.response?.data);
       throw error;
     }
   },
 
   async ReenviarCod(AprNroDocumento : string) : Promise<void>{
-    console.log("DATOS QUE SE ENVÍAN:", AprNroDocumento);
     try{
         await api.post("/Aprendiz/reenviar-codigo", {AprNroDocumento})
 
     } catch (error: any) {
-      console.log("ERROR COMPLETO:", error.response?.data);
       throw error;
     }
   },

@@ -17,7 +17,6 @@ export default function useMensajesViewModels() {
         setCargar(false)
        }
        catch{
-        console.log("ocurrio un error al obtener los mensajes ")
         setCargar(false)
        }
     }

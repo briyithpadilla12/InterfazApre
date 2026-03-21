@@ -32,7 +32,7 @@ export function useCitasViewModel() {
       const data = await CitasService.ObtenerMisCitas();
       setCitas(data);
     } catch (error) {
-      console.log("error al cargar las citas", error);
+      void error;
       setCitas([]);
     } finally {
       setCargando(false);
@@ -66,9 +66,6 @@ export function useCitasViewModel() {
         message?: string;
       };
       const data = axErr.response?.data;
-      console.log("[DEBUG CitasViewModel] SolicitarCita ERROR - status:", axErr.response?.status);
-      console.log("[DEBUG CitasViewModel] SolicitarCita ERROR - data completo:", JSON.stringify(data, null, 2));
-
       let msg = "No se pudo enviar la cita";
       if (data) {
         if (typeof data === "string") msg = data;
@@ -96,7 +93,7 @@ export function useCitasViewModel() {
       await cargarCitas();
       return true;
     } catch (err) {
-      console.log("error al cancelar cita", err);
+      void err;
       return false;
     } finally {
       setCargandoCancelar(null);

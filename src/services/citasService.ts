@@ -16,16 +16,10 @@ function mapearCita(raw: Record<string, unknown>): Citas {
 const CitasServices = {
   /** POST /api/Citas/solicitar-cita - usa JWT, body: tipoCita, motivoSolicitud */
   async CrearCita(cita: SolicitarCita): Promise<unknown> {
-    console.log("[DEBUG CitasService] CrearCita - payload:", JSON.stringify(cita));
     try {
       const response = await api.post("Citas/solicitar-cita", cita);
-      console.log("[DEBUG CitasService] CrearCita OK - status:", response.status);
       return response.data;
     } catch (err: unknown) {
-      const axErr = err as { response?: { status?: number; data?: unknown }; message?: string };
-      console.log("[DEBUG CitasService] CrearCita ERROR - status:", axErr.response?.status);
-      console.log("[DEBUG CitasService] CrearCita ERROR - response.data:", JSON.stringify(axErr.response?.data, null, 2));
-      console.log("[DEBUG CitasService] CrearCita ERROR - message:", axErr.message);
       throw err;
     }
   },

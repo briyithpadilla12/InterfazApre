@@ -49,7 +49,6 @@ export default function PerfilCard({
   acudienteTelefono,
   ficha,
 }: PerfilCardProps) {
-  console.log("[DEBUG PerfilCard] Props recibidas:", { nombreCompleto, correoPersonal, telefono });
   const docCompleto = [tipoDocumento, numeroDocumento].filter(Boolean).join(" ") || numeroDocumento;
   const acudienteCompleto = [acudienteNombre, acudienteApellido].filter(Boolean).join(" ");
 

@@ -17,22 +17,18 @@ function base64Decode(str: string): string {
 
 /** Decodifica el payload del JWT y devuelve el nameid (ID del usuario). */
 export function obtenerUserIdDesdeToken(token: string | null): string | null {
-  console.log("[DEBUG JWT] obtenerUserIdDesdeToken - token presente:", !!token);
   if (!token) return null;
   try {
     const parts = token.split(".");
-    console.log("[DEBUG JWT] Partes del token:", parts.length);
     if (parts.length !== 3) return null;
     const payload = parts[1];
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const json = base64Decode(base64);
     const data = JSON.parse(json);
-    console.log("[DEBUG JWT] Claves del payload:", Object.keys(data));
     const nameid = data.nameid ?? data.sub ?? data.userId;
-    console.log("[DEBUG JWT] nameid extraído:", nameid);
     return nameid != null ? String(nameid) : null;
   } catch (err) {
-    console.log("[DEBUG JWT] Error al decodificar:", err);
+    void err;
     return null;
   }
 }

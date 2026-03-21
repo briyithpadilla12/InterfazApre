@@ -72,9 +72,6 @@ export function useCompletarDatosViewModel(documento: string) {
     setCargando(true);
     setError(null);
 
-    console.log("[DEBUG CompletarDatosVM] documento:", documento);
-    console.log("[DEBUG CompletarDatosVM] formulario (raw):", JSON.stringify(formulario, null, 2));
-
     try {
       const payload: CompletarInformacionPayload = {
         aprFechaNac: formulario.aprFechaNac,
@@ -94,7 +91,6 @@ export function useCompletarDatosViewModel(documento: string) {
         aprAcudNombre: formulario.aprAcudNombre.trim(),
         aprAcudApellido: formulario.aprAcudApellido.trim(),
       };
-      console.log("[DEBUG CompletarDatosVM] payload construido - aprCiudadFk:", payload.aprCiudadFk, "aprEstadoAprFk:", payload.aprEstadoAprFk);
       await completarInformacionService.completar(documento, payload);
       return true;
     } catch (err: unknown) {
@@ -105,7 +101,6 @@ export function useCompletarDatosViewModel(documento: string) {
         const errList = Object.entries(data.errors).flatMap(([k, v]) => (v || []).map((e) => `${k}: ${e}`));
         if (errList.length > 0) msg = errList.join("; ");
       }
-      console.log("[DEBUG CompletarDatosVM] Error capturado - status:", axErr.response?.status, "data:", JSON.stringify(data));
       setError(String(msg));
       return false;
     } finally {

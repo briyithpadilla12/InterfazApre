@@ -42,6 +42,37 @@ function mapearYValidarItem(item: ItemPaginaCrudo): PaginaDiarioResumen | null {
   return { id: id || Math.abs(hashCode(titulo + fecha)), titulo, fecha, emociones };
 }
 
+function mapearYValidarItemDesdeDiarioEndpoint(item: ItemPaginaCrudo): PaginaDiarioResumen | null {
+  const raw = item as Record<string, unknown>;
+
+  const pagCodigoRaw = raw.pagCodigo ?? raw.PagCodigo;
+  const id = typeof pagCodigoRaw === "number" ? pagCodigoRaw : Number(pagCodigoRaw ?? 0);
+
+  const pagTituloRaw = raw.pagTitulo ?? raw.PagTitulo ?? "";
+  const titulo =
+    typeof pagTituloRaw === "string" ? sanitizarTexto(pagTituloRaw, MAX_TITULO) : "";
+
+  const pagFechaRealizacionRaw = raw.pagFechaRealizacion ?? raw.PagFechaRealizacion ?? "";
+  const fecha =
+    typeof pagFechaRealizacionRaw === "string"
+      ? pagFechaRealizacionRaw.includes("T")
+        ? pagFechaRealizacionRaw.split("T")[0]
+        : pagFechaRealizacionRaw
+      : "";
+
+  const emocionRaw = raw.emocion ?? raw.Emocion;
+  const emocionObj = (emocionRaw && typeof emocionRaw === "object" ? emocionRaw : null) as
+    | Record<string, unknown>
+    | null;
+  const emoNombreRaw = emocionObj?.emoNombre ?? emocionObj?.EmoNombre ?? emocionObj?.nombre;
+  const emocionNombre =
+    typeof emoNombreRaw === "string" ? sanitizarTexto(emoNombreRaw, MAX_EMOCION_LEN) : "";
+  const emociones = emocionNombre ? [emocionNombre] : [];
+
+  if (!id && !titulo) return null;
+  return { id: id || Math.abs(hashCode(titulo + fecha)), titulo: titulo || "Sin título", fecha, emociones };
+}
+
 function hashCode(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0;
@@ -51,6 +82,24 @@ function hashCode(s: string): number {
 const PaginaDiarioService = {
   async crearPagina(datos: PaginaDiario): Promise<void> {
     await api.post("/PaginaDiario", datos);
+  },
+
+  /**
+   * GET /PaginaDiario/diario/{diarioId}
+   * Devuelve páginas de un diario, normalmente en un wrapper { paginas: [...] }.
+   */
+  async listarPorDiario(diarioId: number): Promise<PaginaDiarioResumen[]> {
+    const { data } = await api.get<unknown>(`/PaginaDiario/diario/${diarioId}`);
+    const paginasRaw = Array.isArray(data)
+      ? data
+      : (data as { paginas?: ItemPaginaCrudo[]; Paginas?: ItemPaginaCrudo[] })?.paginas ??
+        (data as { paginas?: ItemPaginaCrudo[]; Paginas?: ItemPaginaCrudo[] })?.Paginas ??
+        [];
+
+    const items = Array.isArray(paginasRaw) ? paginasRaw : [];
+    return items
+      .map((item) => mapearYValidarItemDesdeDiarioEndpoint(item))
+      .filter((r): r is PaginaDiarioResumen => r != null);
   },
 
   /** Lista todas las páginas activas del usuario (según token). Solo devuelve ítems validados y sanitizados. */
