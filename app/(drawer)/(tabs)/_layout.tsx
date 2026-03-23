@@ -67,6 +67,13 @@ export default function TabLayout() {
     name="[id]"
     options={{
      tabBarItemStyle: {display : "none"} }}/>
+
+ <Tabs.Screen
+    name="chat/[appointmentId]"
+    options={{
+      tabBarItemStyle: { display: "none" },
+    }}
+  />
     </Tabs>
   );
 }

@@ -15,6 +15,31 @@ function base64Decode(str: string): string {
   return output;
 }
 
+/** Devuelve el timestamp 'exp' del JWT (segundos desde epoch), o null si no existe. */
+export function obtenerExpDesdeToken(token: string | null): number | null {
+  if (!token) return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = base64Decode(base64);
+    const data = JSON.parse(json);
+    const exp = data.exp;
+    return typeof exp === "number" ? exp : null;
+  } catch {
+    return null;
+  }
+}
+
+/** true si el access JWT está expirado o a punto (skewSec segundos de margen). */
+export function isAccessTokenExpired(token: string | null, skewSec = 60): boolean {
+  if (!token) return true;
+  const exp = obtenerExpDesdeToken(token);
+  if (exp == null) return true;
+  return exp <= Math.floor(Date.now() / 1000) + skewSec;
+}
+
 /** Decodifica el payload del JWT y devuelve el nameid (ID del usuario). */
 export function obtenerUserIdDesdeToken(token: string | null): string | null {
   if (!token) return null;

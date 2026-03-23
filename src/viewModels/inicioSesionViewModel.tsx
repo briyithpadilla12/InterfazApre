@@ -53,8 +53,8 @@ export function useInicioSesionViewModel() {
     setError(null);
 
     try {
-      const token = await AutenticacionUsuServices.InicioSesion(credenciales);
-      await login(token);
+      const { token, refreshToken } = await AutenticacionUsuServices.InicioSesion(credenciales);
+      await login(token, refreshToken);
       return token;
     } catch (err) {
       const mensaje = extraerMensajeError(err);

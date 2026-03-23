@@ -15,8 +15,8 @@ import { useRecuperarContraViewModel } from "../viewModels/recuperarcontra";
 interface ModalRecuperarContraProps {
   visible: boolean;
   onClose: () => void;
-  /** Se llama después de que el correo se envió con éxito y pasó un breve tiempo de espera. */
-  onExitoEnviado?: () => void;
+  /** Se llama después de que el correo se envió con éxito. Recibe aprendizId para el paso de restablecer. */
+  onExitoEnviado?: (aprendizId: number) => void;
 }
 
 export default function ModalRecuperarContra({ visible, onClose, onExitoEnviado }: ModalRecuperarContraProps) {
@@ -27,21 +27,25 @@ export default function ModalRecuperarContra({ visible, onClose, onExitoEnviado 
     if (!visible) {
       reset();
       setCorreoElectronico("");
+      setAprendizIdGuardado(null);
     }
   }, [visible, reset]);
 
-  // Tras éxito, espera breve y notifica al padre para abrir el modal de restablecer contraseña.
+  const [aprendizIdGuardado, setAprendizIdGuardado] = useState<number | null>(null);
+
+  // Tras éxito, notificar al padre con aprendizId tras breve espera.
   useEffect(() => {
-    if (!exito || !onExitoEnviado) return;
-    const id = setTimeout(() => {
-      onExitoEnviado();
+    if (!exito || !onExitoEnviado || aprendizIdGuardado == null) return;
+    const timer = setTimeout(() => {
+      onExitoEnviado(aprendizIdGuardado);
     }, 1500);
-    return () => clearTimeout(id);
-  }, [exito, onExitoEnviado]);
+    return () => clearTimeout(timer);
+  }, [exito, onExitoEnviado, aprendizIdGuardado]);
 
   const manejarBoton = async () => {
     Keyboard.dismiss();
-    await recuperarContra(correoElectronico);
+    const id = await recuperarContra(correoElectronico);
+    if (id != null) setAprendizIdGuardado(id);
   };
 
   return (

@@ -15,20 +15,23 @@ import { useRestablecerContraViewModel } from "@/src/viewModels/restablecerContr
 interface ModalRestablecerContraProps {
   visible: boolean;
   onClose: () => void;
+  /** ID del aprendiz (devuelto por recuperar-password). Necesario para reset-password. */
+  aprendizId: number;
 }
 
 export default function ModalRestablecerContra({
   visible,
   onClose,
+  aprendizId,
 }: ModalRestablecerContraProps) {
   const { restablecerContra, cargando, error, exito, reset } = useRestablecerContraViewModel();
-  const [token, setToken] = useState("");
+  const [codigo, setCodigo] = useState("");
   const [nuevaContraseña, setNuevaContraseña] = useState("");
 
   useEffect(() => {
     if (!visible) {
       reset();
-      setToken("");
+      setCodigo("");
       setNuevaContraseña("");
     }
   }, [visible, reset]);
@@ -45,7 +48,8 @@ export default function ModalRestablecerContra({
   const manejarRestablecer = async () => {
     Keyboard.dismiss();
     await restablecerContra({
-      token,
+      aprendizId,
+      codigo,
       nuevaPassword: nuevaContraseña,
     });
   };
@@ -62,13 +66,15 @@ export default function ModalRestablecerContra({
           <View style={estilos.contenedorModal}>
             <Text style={estilos.titulo}>Restablecer contraseña</Text>
 
-            <Text style={estilos.etiqueta}>Token</Text>
+            <Text style={estilos.etiqueta}>Código de verificación</Text>
             <TextInput
               style={estilos.input}
               placeholderTextColor="#999"
-              placeholder="Ingresa el token enviado a tu correo"
-              value={token}
-              onChangeText={setToken}
+              placeholder="Ingresa el código de 6 dígitos enviado a tu correo"
+              value={codigo}
+              onChangeText={setCodigo}
+              keyboardType="numeric"
+              maxLength={6}
               autoCapitalize="none"
               autoCorrect={false}
               editable={!cargando}
@@ -88,7 +94,7 @@ export default function ModalRestablecerContra({
             <Pressable
               style={estilos.boton}
               onPress={manejarRestablecer}
-              disabled={cargando}
+              disabled={cargando || !aprendizId || !codigo.trim() || !nuevaContraseña}
             >
               {cargando ? (
                 <ActivityIndicator color="#fff" />

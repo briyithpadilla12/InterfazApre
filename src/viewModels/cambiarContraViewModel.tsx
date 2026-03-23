@@ -1,8 +1,6 @@
 import { useState } from "react";
 import AutenticacionUsuServices from "../services/AutenticacionUsuServices";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 function extraerMensajeError(err: unknown): string {
   if (typeof err === "string") return err;
   const axiosErr = err as { response?: { data?: unknown }; message?: string };
@@ -14,28 +12,25 @@ function extraerMensajeError(err: unknown): string {
   if (data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string") {
     return (data as { message: string }).message;
   }
-  return "No encontramos una cuenta con ese correo. Verifica e intenta de nuevo";
+  return "No se pudo cambiar la contraseña. Intenta de nuevo";
 }
 
-export function useRecuperarContraViewModel() {
+export function useCambiarContraViewModel() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState(false);
 
-  const reset = () => {
-    setError(null);
-    setExito(false);
-  };
-
-  const recuperarContra = async (correo: string): Promise<number | null> => {
-    const correoTrim = correo?.trim();
-    if (!correoTrim) {
-      setError("Ingresa tu correo electrónico");
-      return null;
+  const cambiarPassword = async (
+    passwordActual: string,
+    passwordNueva: string
+  ): Promise<boolean> => {
+    if (!passwordActual?.trim()) {
+      setError("Ingresa tu contraseña actual");
+      return false;
     }
-    if (!EMAIL_REGEX.test(correoTrim)) {
-      setError("Correo electrónico inválido");
-      return null;
+    if (!passwordNueva || passwordNueva.length < 6) {
+      setError("La nueva contraseña debe tener al menos 6 caracteres");
+      return false;
     }
 
     setCargando(true);
@@ -43,19 +38,24 @@ export function useRecuperarContraViewModel() {
     setExito(false);
 
     try {
-      const res = await AutenticacionUsuServices.RecuperarContraCorreo(correoTrim);
+      await AutenticacionUsuServices.CambiarPassword(passwordActual.trim(), passwordNueva);
       setExito(true);
-      return res.aprendizId ?? null;
+      return true;
     } catch (err) {
       setError(extraerMensajeError(err));
-      return null;
+      return false;
     } finally {
       setCargando(false);
     }
   };
 
+  const reset = () => {
+    setError(null);
+    setExito(false);
+  };
+
   return {
-    recuperarContra,
+    cambiarPassword,
     cargando,
     error,
     exito,

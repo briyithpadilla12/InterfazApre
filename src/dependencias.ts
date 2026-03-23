@@ -1,8 +1,6 @@
 // src/app/dependencies.ts
 
-import ArticulosServices from "../src/services/articulosService";
-import { ArticulosViewModel } from "../src/viewModels/articulosViewModel"
+import { CardsInfoViewModel } from "../src/viewModels/cardsInfoViewModel";
 
-// Instanciar UNA sola vez
-const articulosService = new ArticulosServices();
-export const articulosViewModel = new ArticulosViewModel(articulosService);
+const cardsInfoViewModel = new CardsInfoViewModel();
+export { cardsInfoViewModel };

@@ -23,6 +23,7 @@ export default function PantallaInicioSesion() {
   const { error, cargando, iniciarSesion, limpiarError } = useInicioSesionViewModel();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRestablecerVisible, setModalRestablecerVisible] = useState(false);
+  const [aprendizIdParaReset, setAprendizIdParaReset] = useState<number | null>(null);
 
   const abrirModal = () => {
     setModalVisible(true);
@@ -34,10 +35,12 @@ export default function PantallaInicioSesion() {
 
   const cerrarModalRestablecer = () => {
     setModalRestablecerVisible(false);
+    setAprendizIdParaReset(null);
   };
 
-  const alExitoEnviadoCorreo = () => {
+  const alExitoEnviadoCorreo = (aprendizId: number) => {
     setModalVisible(false);
+    setAprendizIdParaReset(aprendizId);
     setModalRestablecerVisible(true);
   };
   const router = useRouter();
@@ -122,6 +125,7 @@ export default function PantallaInicioSesion() {
           <ModalRestablecerContra
             visible={modalRestablecerVisible}
             onClose={cerrarModalRestablecer}
+            aprendizId={aprendizIdParaReset ?? 0}
           />
 
           <Pressable

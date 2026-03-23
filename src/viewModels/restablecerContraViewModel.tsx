@@ -13,7 +13,7 @@ function extraerMensajeError(err: unknown): string {
   if (data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string") {
     return (data as { message: string }).message;
   }
-  return "No se pudo restablecer la contraseña. Verifica el token e intenta de nuevo";
+  return "No se pudo restablecer la contraseña. Verifica el código e intenta de nuevo";
 }
 
 export function useRestablecerContraViewModel() {
@@ -27,14 +27,17 @@ export function useRestablecerContraViewModel() {
   };
 
   const restablecerContra = async (datos: RestablecerContra): Promise<void> => {
-    const tokenTrim = datos.token?.trim();
-    const nuevaPassword = datos.nuevaPassword;
+    const codigoTrim = datos.codigo?.trim();
 
-    if (!tokenTrim) {
-      setError("Ingresa el token enviado a tu correo");
+    if (!datos.aprendizId || datos.aprendizId <= 0) {
+      setError("Error interno. Vuelve a solicitar la recuperación de contraseña.");
       return;
     }
-    if (!nuevaPassword || nuevaPassword.length < 6) {
+    if (!codigoTrim) {
+      setError("Ingresa el código de 6 dígitos enviado a tu correo");
+      return;
+    }
+    if (!datos.nuevaPassword || datos.nuevaPassword.length < 6) {
       setError("La nueva contraseña debe tener al menos 6 caracteres");
       return;
     }
@@ -45,8 +48,9 @@ export function useRestablecerContraViewModel() {
 
     try {
       await AutenticacionUsuServices.RestablecerContra({
-        token: tokenTrim,
-        nuevaPassword,
+        aprendizId: datos.aprendizId,
+        codigo: codigoTrim,
+        nuevaPassword: datos.nuevaPassword,
       });
       setExito(true);
     } catch (err) {

@@ -1,9 +1,11 @@
 import { Drawer } from "expo-router/drawer";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DrawerPersonalizado from "@/src/components/DrawerPersonalizado";
+import { ChatNotificationsProvider } from "@/src/context/chatNotificationsContext";
 
 export default function RootLayout() {
   return (
+    <ChatNotificationsProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         drawerContent={(props) => <DrawerPersonalizado {...props} />}
@@ -22,5 +24,6 @@ export default function RootLayout() {
         
       </Drawer>
     </GestureHandlerRootView>
+    </ChatNotificationsProvider>
   );
 }
