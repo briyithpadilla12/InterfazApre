@@ -141,8 +141,14 @@ export default function PantallaInicioSesion() {
           )}
           <Text style={styles.legal}>
             Al iniciar sesión, aceptas los{" "}
-            <Text style={styles.enlace}>Términos de servicio</Text> y la{" "}
-            <Text style={styles.enlace}>Política de privacidad</Text>.
+            <Text style={styles.enlace} onPress={() => router.push("/terminos-condiciones")}>
+              Términos de servicio
+            </Text>{" "}
+            y la{" "}
+            <Text style={styles.enlace} onPress={() => router.push("/politica-privacidad")}>
+              Política de privacidad
+            </Text>
+            .
           </Text>
         </View>
       </View>

@@ -49,8 +49,8 @@ export default function ConfiguracionScreen() {
       title="Soporte y ayuda"
       icon={<Feather name="help-circle" size={24} color="#085394" />}
     >
-      <Link href="/" ><Text>Preguntas frecuentes</Text></Link>
-      <Link href="/" ><Text>Contactar soporte</Text></Link>
+      <Link href="/preguntas-frecuentes" ><Text>Preguntas frecuentes</Text></Link>
+      <Link href="/contactar-soporte" ><Text>Contactar soporte</Text></Link>
       <Link href="/" ><Text>Tutorial de la app</Text></Link>
     </Accordion>
 
@@ -58,9 +58,9 @@ export default function ConfiguracionScreen() {
       title="Información de la app"
       icon={<Feather name="file-text" size={24} color="#085394" />}
     >
-      <Link href="/" ><Text>Políticas de privacidad</Text></Link>
-      <Link href="/" ><Text>Términos y condiciones</Text></Link>
-      <Link href="/" ><Text>Versión de la aplicación</Text></Link>
+      <Link href="/politica-privacidad" ><Text>Políticas de privacidad</Text></Link>
+      <Link href="/terminos-condiciones" ><Text>Términos y condiciones</Text></Link>
+ 
     </Accordion>
 
   </View>
