@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Pressable, Text, TextInput, View, StyleSheet, ActivityIndicator, Keyboard, TouchableWithoutFeedback, ScrollView } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCambiarContraViewModel } from "@/src/viewModels/cambiarContraViewModel";
 
 export default function CambiarContraseña() {
@@ -8,16 +8,21 @@ export default function CambiarContraseña() {
   const [passwordActual, setPasswordActual] = useState("");
   const [nuevaPassword, setNuevaPassword] = useState("");
   const [confirmarPassword, setConfirmarPassword] = useState("");
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     return () => reset();
   }, [reset]);
 
   useEffect(() => {
+    if (exito || error) {
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  }, [exito, error]);
+
+  useEffect(() => {
     if (exito) {
-      const timer = setTimeout(() => {
-        router.back();
-      }, 1800);
+      const timer = setTimeout(() => router.back(), 2500);
       return () => clearTimeout(timer);
     }
   }, [exito]);
@@ -44,7 +49,12 @@ export default function CambiarContraseña() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.contenedor} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scroll}
+        contentContainerStyle={styles.contenedor}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.cajaInformativa}>
           <Text style={styles.textoInformativo}>
             Por tu seguridad, necesitamos verificar tu contraseña actual antes de establecer una nueva.
@@ -90,11 +100,23 @@ export default function CambiarContraseña() {
           <Text style={styles.textoErrorCampo}>Las contraseñas no coinciden</Text>
         ) : null}
 
-        {error ? <Text style={styles.textoError}>{error}</Text> : null}
-        {exito ? <Text style={styles.textoExito}>Contraseña actualizada correctamente</Text> : null}
+        {error ? (
+          <View style={styles.cajaError}>
+            <Text style={styles.textoError}>⚠ {error}</Text>
+          </View>
+        ) : null}
+        {exito ? (
+          <View style={styles.cajaExito}>
+            <Text style={styles.textoExito}>✓ Contraseña actualizada correctamente</Text>
+          </View>
+        ) : null}
 
         <Pressable
-          style={[styles.boton, !puedeEnviar && styles.botonDeshabilitado]}
+          style={[
+            styles.boton,
+            !puedeEnviar && styles.botonDeshabilitado,
+            puedeEnviar && styles.botonActivo,
+          ]}
           onPress={manejarCambio}
           disabled={!puedeEnviar}
         >
@@ -167,25 +189,48 @@ const styles = StyleSheet.create({
     marginTop: -12,
     marginBottom: 12,
   },
+  cajaError: {
+    backgroundColor: "#FEE2E2",
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+  },
   textoError: {
     color: "#dc2626",
     fontSize: 14,
-    marginTop: 8,
-    textAlign: "center",
-  },
-  textoExito: {
-    color: "#16a34a",
-    fontSize: 14,
-    marginTop: 8,
     textAlign: "center",
     fontWeight: "500",
   },
+  cajaExito: {
+    backgroundColor: "#D1FAE5",
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#34D399",
+  },
+  textoExito: {
+    color: "#059669",
+    fontSize: 15,
+    textAlign: "center",
+    fontWeight: "600",
+  },
   boton: {
-    backgroundColor: "#8FB3D9",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 20,
+    backgroundColor: "#9CA3AF",
+  },
+  botonActivo: {
+    backgroundColor: "#085394",
+    shadowColor: "#085394",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   botonDeshabilitado: {
     opacity: 0.6,

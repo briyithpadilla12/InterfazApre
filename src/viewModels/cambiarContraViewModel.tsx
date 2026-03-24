@@ -1,16 +1,22 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import AutenticacionUsuServices from "../services/AutenticacionUsuServices";
 
 function extraerMensajeError(err: unknown): string {
   if (typeof err === "string") return err;
-  const axiosErr = err as { response?: { data?: unknown }; message?: string };
+  const axiosErr = err as { response?: { data?: unknown; status?: number }; message?: string };
   if (axiosErr.message === "Network Error" || axiosErr.message?.includes("timeout")) {
     return "Sin conexión. Revisa tu internet";
   }
   const data = axiosErr.response?.data;
   if (typeof data === "string") return data;
-  if (data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string") {
-    return (data as { message: string }).message;
+  if (data && typeof data === "object") {
+    const d = data as Record<string, unknown>;
+    if (typeof d.message === "string") return d.message;
+    if (typeof d.detail === "string") return d.detail;
+    if (typeof d.title === "string") return d.title;
+  }
+  if (axiosErr.response?.status === 400) {
+    return "La contraseña actual no es correcta";
   }
   return "No se pudo cambiar la contraseña. Intenta de nuevo";
 }
@@ -49,10 +55,10 @@ export function useCambiarContraViewModel() {
     }
   };
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setError(null);
     setExito(false);
-  };
+  }, []);
 
   return {
     cambiarPassword,
