@@ -1,5 +1,6 @@
 import ModalEmociones from "@/src/components/ModalEmociones";
 import { EMOCION_ID } from "@/src/constants/emocionesDiario";
+import { useEmociones } from "@/src/context/emocionesContext";
 import { useDiarioViewModel } from "@/src/viewModels/diarioViewModel";
 import { usePaginaDiarioViewModel } from "@/src/viewModels/paginaDiarioViewModel";
 import Feather from "@expo/vector-icons/Feather";
@@ -33,6 +34,7 @@ export default function NuevaPaginaDiarioScreen() {
   const { diario, asegurarDiario, error: errorDiario } = useDiarioViewModel();
   const { guardarPagina, cargando, error: errorGuardar, exito, reset } = usePaginaDiarioViewModel();
 
+  const { emociones: emocionesAPI } = useEmociones();
   const [emocionesSeleccionadas, setEmocionesSeleccionadas] = useState<string[]>([]);
   const [pagTitulo, setPagTitulo] = useState("");
   const [contenidoDiario, setContenidoDiario] = useState("");
@@ -62,7 +64,14 @@ export default function NuevaPaginaDiarioScreen() {
       return;
     }
     const primeraEmocion = emocionesSeleccionadas[0];
-    const pagEmocionFk = primeraEmocion ? (EMOCION_ID[primeraEmocion] ?? 1) : 0;
+    const emocionAPI = primeraEmocion
+      ? emocionesAPI.find((e) => e.emoNombre === primeraEmocion)
+      : undefined;
+    const pagEmocionFk = emocionAPI
+      ? emocionAPI.emoCodigo
+      : primeraEmocion
+        ? (EMOCION_ID[primeraEmocion] ?? 1)
+        : 0;
     const payload = {
       pagTitulo: pagTitulo.trim(),
       pagContenido: contenidoDiario.trim(),

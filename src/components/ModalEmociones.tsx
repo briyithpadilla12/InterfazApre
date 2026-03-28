@@ -1,5 +1,7 @@
+import { useEmociones } from "@/src/context/emocionesContext";
 import { EMOCIONES_DIARIO } from "@/src/constants/emocionesDiario";
 import {
+  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -21,6 +23,22 @@ export default function ModalEmociones({
   seleccionadas,
   onToggle,
 }: ModalEmocionesProps) {
+  const { emociones, cargando } = useEmociones();
+
+  const items = emociones.length > 0
+    ? emociones.map((e) => ({
+        id: e.emoCodigo,
+        texto: e.emoNombre,
+        emoji: e.emoEmoji ?? "❓",
+        colorFondo: e.emoColorFondo ?? "#f9fafb",
+      }))
+    : EMOCIONES_DIARIO.map((e, i) => ({
+        id: i + 1,
+        texto: e.texto,
+        emoji: e.emoji,
+        colorFondo: e.colorFondo,
+      }));
+
   return (
     <Modal
       animationType="fade"
@@ -32,37 +50,41 @@ export default function ModalEmociones({
         <View style={estilos.contenedorModal}>
           <Text style={estilos.titulo}>¿Cómo te sientes hoy?</Text>
 
-          <ScrollView
-            style={estilos.lista}
-            contentContainerStyle={estilos.listaContenido}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {EMOCIONES_DIARIO.map((item) => {
-              const seleccionada = seleccionadas.includes(item.texto);
-              return (
-                <Pressable
-                  key={item.texto}
-                  style={[
-                    estilos.celda,
-                    seleccionada && { backgroundColor: item.colorFondo },
-                  ]}
-                  onPress={() => onToggle(item.texto)}
-                >
-                  <Text style={estilos.emoji}>{item.emoji}</Text>
-                  <Text
+          {cargando ? (
+            <ActivityIndicator size="large" color="#085394" style={{ marginVertical: 40 }} />
+          ) : (
+            <ScrollView
+              style={estilos.lista}
+              contentContainerStyle={estilos.listaContenido}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {items.map((item) => {
+                const seleccionada = seleccionadas.includes(item.texto);
+                return (
+                  <Pressable
+                    key={item.id}
                     style={[
-                      estilos.textoEmocion,
-                      seleccionada && estilos.textoSeleccionado,
+                      estilos.celda,
+                      seleccionada && { backgroundColor: item.colorFondo },
                     ]}
-                    numberOfLines={1}
+                    onPress={() => onToggle(item.texto)}
                   >
-                    {item.texto}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+                    <Text style={estilos.emoji}>{item.emoji}</Text>
+                    <Text
+                      style={[
+                        estilos.textoEmocion,
+                        seleccionada && estilos.textoSeleccionado,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.texto}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
 
           <Pressable style={estilos.botonCerrar} onPress={onClose}>
             <Text style={estilos.textoBotonCerrar}>Listo</Text>

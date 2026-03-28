@@ -3,6 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuth } from "@/src/context/authContext";
 import { AuthProvider } from "@/src/context/authContext";
+import { EmocionesProvider } from "@/src/context/emocionesContext";
 
 function RootNavigation() {
   const { token, cargando } = useAuth();
@@ -93,7 +94,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootNavigation />
+        <EmocionesProvider>
+          <RootNavigation />
+        </EmocionesProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
