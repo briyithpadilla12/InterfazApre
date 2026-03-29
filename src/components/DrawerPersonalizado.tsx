@@ -41,6 +41,16 @@ export default function DrawerPersonalizado(props: any) {
           icon={({ color }) => <Feather name="book-open" color={color} size={24} />}
           onPress={() => router.push("/citasScreen")}
         />
+        <DrawerItem
+          label="Tests"
+          icon={({ color }) => <Feather name="clipboard" color={color} size={24} />}
+          onPress={() => router.push("/testsScreen")}
+        />
+        <DrawerItem
+          label="Mi Seguimiento"
+          icon={({ color }) => <Feather name="activity" color={color} size={24} />}
+          onPress={() => router.push("/seguimientoScreen")}
+        />
 
          <DrawerItem
   label="Configuración"
