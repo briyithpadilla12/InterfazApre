@@ -56,29 +56,46 @@ export function useCitasViewModel() {
       const axErr = err as {
         response?: {
           status?: number;
-          data?: {
-            message?: string;
-            title?: string;
-            detail?: string;
-            errors?: Record<string, string[]>;
-          };
+          data?: unknown;
         };
         message?: string;
+        code?: string;
       };
-      const data = axErr.response?.data;
       let msg = "No se pudo enviar la cita";
-      if (data) {
-        if (typeof data === "string") msg = data;
-        else if (data.message) msg = data.message;
-        else if (data.detail) msg = data.detail;
-        else if (data.title) msg = data.title;
-        else if (data.errors && typeof data.errors === "object") {
-          const errList = Object.entries(data.errors).flatMap(([k, v]) =>
-            (Array.isArray(v) ? v : [v]).map((e) => `${k}: ${e}`)
-          );
-          if (errList.length > 0) msg = errList.join("; ");
+      const status = axErr.response?.status;
+      const data = axErr.response?.data;
+
+      if (data != null) {
+        if (typeof data === "string" && data.length > 0 && data.length < 500) {
+          msg = data;
+        } else if (typeof data === "object") {
+          const d = data as Record<string, unknown>;
+          const extracted =
+            (d.mensaje as string) ??
+            (d.message as string) ??
+            (d.detail as string) ??
+            (d.title as string);
+          if (extracted) {
+            msg = extracted;
+          } else if (d.errors && typeof d.errors === "object") {
+            const errList = Object.entries(d.errors as Record<string, string[]>)
+              .flatMap(([k, v]) => (Array.isArray(v) ? v : [v]).map((e) => `${k}: ${e}`));
+            if (errList.length > 0) msg = errList.join("; ");
+          }
         }
+      } else if (axErr.code === "ECONNABORTED") {
+        msg = "Tiempo de espera agotado. Revisa tu conexión a internet.";
+      } else if (axErr.code === "ERR_NETWORK" || !axErr.response) {
+        msg = "No se pudo conectar al servidor. Verifica tu conexión.";
       }
+
+      if (status === 404) {
+        msg = msg === "No se pudo enviar la cita"
+          ? "Tu perfil no tiene una ficha o psicólogo asignado. Contacta a tu instructor."
+          : msg;
+      }
+
+      console.warn(`[SolicitarCita] HTTP ${status ?? "?"} → ${msg}`);
       setErrorEnvioCita(msg);
       return false;
     } finally {

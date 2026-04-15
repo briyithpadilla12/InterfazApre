@@ -32,6 +32,8 @@ export function ModalSolicitarCita({
       motivoSolicitud: descripcion.trim(),
     });
     if (ok) {
+      setTipoCita("");
+      setDescripcion("");
       onClose();
     }
   };
