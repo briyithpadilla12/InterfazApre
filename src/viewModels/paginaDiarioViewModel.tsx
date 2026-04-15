@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PaginaDiarioService from "../services/paginaDiarioService";
-import { PaginaDiario } from "../models/paginaDiario";
+import { PaginaDiario, type PaginaDiarioEditarPayload } from "../models/paginaDiario";
 
 function extraerMensajeError(err: unknown): string {
   if (typeof err === "string") return err;
@@ -27,22 +27,24 @@ export function usePaginaDiarioViewModel() {
   };
 
   const validar = (p: PaginaDiario): string | null => {
-    console.log("[DEBUG usePaginaDiarioViewModel.validar] p.pagDiarioFk:", p.pagDiarioFk, "tipo:", typeof p.pagDiarioFk);
     if (!p.pagTitulo.trim()) return "La página necesita un título";
     if (!p.pagContenido.trim()) return "Escribe algo en tu diario";
-    if (!p.pagDiarioFk) {
-      console.log("[DEBUG usePaginaDiarioViewModel.validar] FALLA: pagDiarioFk es falsy → 'No se encontró tu diario'");
-      return "No se encontró tu diario";
-    }
+    if (!p.pagDiarioFk) return "No se encontró tu diario";
+    if (!p.pagEmocionFk) return "Selecciona una emoción";
+    return null;
+  };
+
+  const validarEdicion = (p: PaginaDiarioEditarPayload): string | null => {
+    if (!p.pagTitulo.trim()) return "La página necesita un título";
+    if (!p.pagContenido.trim()) return "Escribe algo en tu diario";
+    if (!p.pagDiarioFk) return "No se encontró tu diario";
     if (!p.pagEmocionFk) return "Selecciona una emoción";
     return null;
   };
 
   const guardarPagina = async (p: PaginaDiario): Promise<boolean> => {
-    console.log("[DEBUG usePaginaDiarioViewModel.guardarPagina] Objeto recibido p:", { ...p, pagContenido: p.pagContenido?.slice(0, 30) + "..." });
     const msg = validar(p);
     if (msg) {
-      console.log("[DEBUG usePaginaDiarioViewModel.guardarPagina] Validación fallida:", msg);
       setError(msg);
       setExito(false);
       return false;
@@ -64,6 +66,56 @@ export function usePaginaDiarioViewModel() {
     }
   };
 
-  return { guardarPagina, cargando, error, exito, reset };
+  const actualizarPagina = async (
+    id: number,
+    payload: PaginaDiarioEditarPayload
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const msg = validarEdicion(payload);
+    if (msg) {
+      setError(msg);
+      setExito(false);
+      return { ok: false, error: msg };
+    }
+    setCargando(true);
+    setError(null);
+    setExito(false);
+    try {
+      await PaginaDiarioService.editarPagina(id, payload);
+      setExito(true);
+      return { ok: true };
+    } catch (err) {
+      const m = extraerMensajeError(err);
+      setError(m);
+      return { ok: false, error: m };
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const eliminarPagina = async (id: number): Promise<boolean> => {
+    setCargando(true);
+    setError(null);
+    setExito(false);
+    try {
+      await PaginaDiarioService.eliminarPagina(id);
+      setExito(true);
+      return true;
+    } catch (err) {
+      setError(extraerMensajeError(err));
+      return false;
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  return {
+    guardarPagina,
+    actualizarPagina,
+    eliminarPagina,
+    cargando,
+    error,
+    exito,
+    reset,
+  };
 }
 
