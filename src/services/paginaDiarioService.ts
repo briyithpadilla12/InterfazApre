@@ -1,5 +1,10 @@
 import api from "./apiCliente";
-import { PaginaDiario, PaginaDiarioResumen } from "../models/paginaDiario";
+import {
+  PaginaDiario,
+  PaginaDiarioEditarPayload,
+  PaginaDiarioListaItem,
+  PaginaDiarioResumen,
+} from "../models/paginaDiario";
 
 /** Item crudo que puede devolver la API (camelCase o PascalCase). */
 type ItemPaginaCrudo = Record<string, unknown>;
@@ -79,9 +84,130 @@ function hashCode(s: string): number {
   return h;
 }
 
+function extraerArrayDesdeRespuesta(data: unknown): ItemPaginaCrudo[] {
+  if (Array.isArray(data)) return data as ItemPaginaCrudo[];
+  if (data && typeof data === "object") {
+    const o = data as Record<string, unknown>;
+    const nested =
+      o.paginas ??
+      o.Paginas ??
+      o.data ??
+      o.Data ??
+      o.items ??
+      o.Items ??
+      o.value ??
+      o.Value ??
+      o.result ??
+      o.Result;
+    if (Array.isArray(nested)) return nested as ItemPaginaCrudo[];
+  }
+  return [];
+}
+
+/** Mapea un ítem de GET /PaginaDiario (o listas equivalentes) a modelo completo para lista/detalle. */
+function mapearItemListaCompleta(item: ItemPaginaCrudo): PaginaDiarioListaItem | null {
+  const raw = item as Record<string, unknown>;
+  const id = Number(raw.pagCodigo ?? raw.PagCodigo ?? raw.pagId ?? raw.PagId ?? 0);
+  const tituloRaw = raw.pagTitulo ?? raw.PagTitulo ?? "";
+  const titulo =
+    typeof tituloRaw === "string" ? sanitizarTexto(tituloRaw, MAX_TITULO) : "";
+
+  const pagFechaRealizacionRaw = raw.pagFechaRealizacion ?? raw.PagFechaRealizacion ?? "";
+  const pagFechaRaw = raw.pagFecha ?? raw.PagFecha ?? "";
+  const fechaSrc =
+    typeof pagFechaRealizacionRaw === "string" && pagFechaRealizacionRaw
+      ? pagFechaRealizacionRaw
+      : typeof pagFechaRaw === "string"
+        ? pagFechaRaw
+        : "";
+  const fecha =
+    typeof fechaSrc === "string"
+      ? fechaSrc.includes("T")
+        ? fechaSrc.split("T")[0]
+        : fechaSrc
+      : "";
+
+  const emocionRaw = raw.emocion ?? raw.Emocion;
+  const emocionObj = (emocionRaw && typeof emocionRaw === "object" ? emocionRaw : null) as
+    | Record<string, unknown>
+    | null;
+  const emoNombreRaw = emocionObj?.emoNombre ?? emocionObj?.EmoNombre ?? emocionObj?.nombre;
+  const emocionNombre =
+    typeof emoNombreRaw === "string" ? sanitizarTexto(emoNombreRaw, MAX_EMOCION_LEN) : "";
+  const emocionesRaw = raw.emociones ?? raw.Emociones;
+  let emociones: string[] = Array.isArray(emocionesRaw)
+    ? emocionesRaw.map((e) => sanitizarTexto(e, MAX_EMOCION_LEN)).filter(Boolean)
+    : emocionNombre
+      ? [emocionNombre]
+      : [];
+
+  const pagContenidoRaw = raw.pagContenido ?? raw.PagContenido ?? "";
+  const pagContenido = typeof pagContenidoRaw === "string" ? pagContenidoRaw : "";
+
+  const diarioAnidado =
+    raw.diario && typeof raw.diario === "object"
+      ? (raw.diario as Record<string, unknown>)
+      : null;
+  const pagDiarioFk = Number(
+    raw.pagDiarioFk ??
+      raw.PagDiarioFk ??
+      raw.diarioCodigo ??
+      raw.DiarioCodigo ??
+      diarioAnidado?.diaCodigo ??
+      diarioAnidado?.DiaCodigo ??
+      diarioAnidado?.diaId ??
+      diarioAnidado?.DiaId ??
+      0
+  );
+  const pagEmocionFk = Number(raw.pagEmocionFk ?? raw.PagEmocionFk ?? 0);
+  const pagImagenUrlRaw = raw.pagImagenUrl ?? raw.PagImagenUrl;
+  const pagImagenUrl =
+    typeof pagImagenUrlRaw === "string" && pagImagenUrlRaw.trim() ? pagImagenUrlRaw.trim() : undefined;
+
+  if (!id && !titulo) return null;
+  return {
+    id: id || Math.abs(hashCode(titulo + fecha)),
+    titulo: titulo || "Sin título",
+    fecha,
+    emociones,
+    pagContenido,
+    pagDiarioFk,
+    pagEmocionFk,
+    pagImagenUrl,
+  };
+}
+
 const PaginaDiarioService = {
   async crearPagina(datos: PaginaDiario): Promise<void> {
     await api.post("/PaginaDiario", datos);
+  },
+
+  /**
+   * GET /PaginaDiario — listado de páginas (contenido y FKs para ver/editar sin GET por id).
+   */
+  async listarDesdeRaiz(): Promise<PaginaDiarioListaItem[]> {
+    const { data } = await api.get<unknown>("/PaginaDiario");
+    const items = extraerArrayDesdeRespuesta(data);
+    return items
+      .map((item) => mapearItemListaCompleta(item))
+      .filter((r): r is PaginaDiarioListaItem => r != null);
+  },
+
+  async editarPagina(id: number, payload: PaginaDiarioEditarPayload): Promise<void> {
+    const body: Record<string, unknown> = {
+      pagTitulo: payload.pagTitulo,
+      pagContenido: payload.pagContenido,
+      pagDiarioFk: payload.pagDiarioFk,
+      pagEmocionFk: payload.pagEmocionFk,
+    };
+    if (payload.pagImagenUrl != null && payload.pagImagenUrl !== "") {
+      body.pagImagenUrl = payload.pagImagenUrl;
+    }
+    await api.put(`/PaginaDiario/editar/${id}`, body);
+  },
+
+  async eliminarPagina(id: number): Promise<void> {
+    await api.put(`/PaginaDiario/eliminar/${id}`);
   },
 
   /**
@@ -102,28 +228,33 @@ const PaginaDiarioService = {
       .filter((r): r is PaginaDiarioResumen => r != null);
   },
 
+  /**
+   * Mismo origen que listarPorDiario, pero mapea a ítems completos (contenido, FKs) para cards y detalle.
+   * Preferible a GET /PaginaDiario + filtro cuando el listado por diario es el contrato estable.
+   */
+  async listarPorDiarioCompleto(diarioId: number): Promise<PaginaDiarioListaItem[]> {
+    const { data } = await api.get<unknown>(`/PaginaDiario/diario/${diarioId}`);
+    const paginasRaw = Array.isArray(data)
+      ? data
+      : (data as { paginas?: ItemPaginaCrudo[]; Paginas?: ItemPaginaCrudo[] })?.paginas ??
+        (data as { paginas?: ItemPaginaCrudo[]; Paginas?: ItemPaginaCrudo[] })?.Paginas ??
+        [];
+
+    const items = Array.isArray(paginasRaw) ? paginasRaw : [];
+    return items
+      .map((item) => mapearItemListaCompleta(item))
+      .filter((r): r is PaginaDiarioListaItem => r != null);
+  },
+
   /** Lista todas las páginas activas del usuario (según token). Solo devuelve ítems validados y sanitizados. */
   async listarActivos(): Promise<PaginaDiarioResumen[]> {
     const { data } = await api.get<unknown>("/PaginaDiario/activos");
-    console.log("[DEBUG PaginaDiarioService.listarActivos] ¿data es array?", Array.isArray(data));
-    if (Array.isArray(data)) {
-      console.log("[DEBUG PaginaDiarioService.listarActivos] Cantidad de ítems:", data.length);
-      if (data.length > 0) {
-        const primer = data[0] as Record<string, unknown>;
-        console.log("[DEBUG PaginaDiarioService.listarActivos] Claves del primer ítem:", primer ? Object.keys(primer) : []);
-        console.log("[DEBUG PaginaDiarioService.listarActivos] ¿Tiene pagDiarioFk/PagDiarioFk/diarioId? pagDiarioFk:", (primer?.pagDiarioFk ?? primer?.PagDiarioFk ?? primer?.diarioId));
-      }
-    } else {
-      console.log("[DEBUG PaginaDiarioService.listarActivos] data no es array, claves:", data && typeof data === "object" ? Object.keys(data as object) : "N/A");
-    }
     const items = Array.isArray(data)
       ? data
       : (data as PaginacionRespuesta)?.items ?? (data as PaginacionRespuesta)?.data ?? [];
-    const resultado = items
+    return items
       .map((item) => mapearYValidarItem((item as ItemPaginaCrudo) ?? {}))
       .filter((r): r is PaginaDiarioResumen => r != null);
-    console.log("[DEBUG PaginaDiarioService.listarActivos] Ítems después de validar:", resultado.length);
-    return resultado;
   },
 
   /**

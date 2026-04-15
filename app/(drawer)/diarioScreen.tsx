@@ -1,5 +1,5 @@
 import style from "@/src/components/Styles";
-import { PaginaDiarioResumen } from "@/src/models/paginaDiario";
+import type { PaginaDiarioListaItem } from "@/src/models/paginaDiario";
 import PaginaDiarioService from "@/src/services/paginaDiarioService";
 import Feather from "@expo/vector-icons/Feather";
 import { useFocusEffect } from "@react-navigation/native";
@@ -8,6 +8,7 @@ import { useDiarioViewModel } from "@/src/viewModels/diarioViewModel";
 import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,18 +25,56 @@ function formatearFechaParaLista(fechaStr: string): string {
 }
 
 /** Valida y prepara datos para mostrar (nunca renderizar contenido crudo de la API). */
-function prepararPaginaParaCard(pagina: PaginaDiarioResumen): PaginaDiarioResumen {
+function prepararPaginaParaCard(pagina: PaginaDiarioListaItem): PaginaDiarioListaItem {
   const titulo = typeof pagina.titulo === "string" ? pagina.titulo.trim().slice(0, 200) : "Sin título";
   const fecha = typeof pagina.fecha === "string" ? pagina.fecha : "";
   const emociones = Array.isArray(pagina.emociones)
     ? pagina.emociones.filter((e) => typeof e === "string").map((e) => String(e).trim().slice(0, 50)).filter(Boolean)
     : [];
-  return { id: pagina.id, titulo, fecha, emociones };
+  return {
+    ...pagina,
+    id: pagina.id,
+    titulo,
+    fecha,
+    emociones,
+  };
 }
 
-function CardPaginaResumen({ pagina }: { pagina: PaginaDiarioResumen }) {
+function CardPaginaResumen({
+  pagina,
+  onEliminar,
+  eliminando,
+}: {
+  pagina: PaginaDiarioListaItem;
+  onEliminar: (id: number) => void;
+  eliminando: boolean;
+}) {
+  const router = useRouter();
   const p = prepararPaginaParaCard(pagina);
   const fechaMostrar = formatearFechaParaLista(p.fecha);
+
+  const irVer = () => {
+    router.push(`/(drawer)/paginaDiario/${p.id}?modo=leer`);
+  };
+  const irEditar = () => {
+    router.push(`/(drawer)/paginaDiario/${p.id}?modo=editar`);
+  };
+
+  const confirmarEliminar = () => {
+    Alert.alert(
+      "Eliminar página",
+      "¿Seguro que quieres eliminar esta página del diario? Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => onEliminar(p.id),
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.card}>
       <Text style={styles.cardFecha}>{fechaMostrar}</Text>
@@ -49,6 +88,37 @@ function CardPaginaResumen({ pagina }: { pagina: PaginaDiarioResumen }) {
           ))}
         </View>
       )}
+      <View style={styles.filaAcciones}>
+        <Pressable
+          style={styles.botonIcono}
+          onPress={irVer}
+          hitSlop={8}
+          accessibilityLabel="Ver página en solo lectura"
+        >
+          <Feather name="eye" size={22} color="#085394" />
+        </Pressable>
+        <Pressable
+          style={styles.botonIcono}
+          onPress={irEditar}
+          hitSlop={8}
+          accessibilityLabel="Editar página"
+        >
+          <Feather name="edit-2" size={22} color="#085394" />
+        </Pressable>
+        <Pressable
+          style={styles.botonIcono}
+          onPress={confirmarEliminar}
+          hitSlop={8}
+          disabled={eliminando}
+          accessibilityLabel="Eliminar página"
+        >
+          {eliminando ? (
+            <ActivityIndicator size="small" color="#b91c1c" />
+          ) : (
+            <Feather name="trash-2" size={22} color="#b91c1c" />
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -56,9 +126,10 @@ function CardPaginaResumen({ pagina }: { pagina: PaginaDiarioResumen }) {
 export default function DiarioScreen() {
   const router = useRouter();
   const { diario, asegurarDiario } = useDiarioViewModel();
-  const [paginasDelDiario, setPaginasDelDiario] = useState<PaginaDiarioResumen[]>([]);
+  const [paginasDelDiario, setPaginasDelDiario] = useState<PaginaDiarioListaItem[]>([]);
   const [cargando, setCargando] = useState(true);
   const [textoBusqueda, setTextoBusqueda] = useState("");
+  const [eliminandoId, setEliminandoId] = useState<number | null>(null);
   const tienePaginas = paginasDelDiario.length > 0;
   const estaCargandoPaginasRef = useRef(false);
 
@@ -73,7 +144,7 @@ export default function DiarioScreen() {
         setPaginasDelDiario([]);
         return;
       }
-      const listado = await PaginaDiarioService.listarPorDiario(d.diaId);
+      const listado = await PaginaDiarioService.listarPorDiarioCompleto(d.diaId);
       setPaginasDelDiario(listado);
     } catch (e) {
       setPaginasDelDiario([]);
@@ -82,6 +153,21 @@ export default function DiarioScreen() {
       estaCargandoPaginasRef.current = false;
     }
   }, [diario, asegurarDiario]);
+
+  const eliminarPagina = useCallback(
+    async (id: number) => {
+      setEliminandoId(id);
+      try {
+        await PaginaDiarioService.eliminarPagina(id);
+        setPaginasDelDiario((prev) => prev.filter((p) => p.id !== id));
+      } catch {
+        Alert.alert("Error", "No se pudo eliminar la página. Intenta de nuevo.");
+      } finally {
+        setEliminandoId(null);
+      }
+    },
+    []
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -137,7 +223,12 @@ export default function DiarioScreen() {
         )}
         {!cargando && mostrarLista && (
           paginasFiltradas.map((pagina) => (
-            <CardPaginaResumen key={pagina.id} pagina={pagina} />
+            <CardPaginaResumen
+              key={pagina.id}
+              pagina={pagina}
+              onEliminar={eliminarPagina}
+              eliminando={eliminandoId === pagina.id}
+            />
           ))
         )}
       </ScrollView>
@@ -220,6 +311,19 @@ const styles = StyleSheet.create({
   chipTexto: {
     fontSize: 13,
     color: "#3730a3",
+  },
+  filaAcciones: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 16,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f3f4f6",
+  },
+  botonIcono: {
+    padding: 6,
   },
   bloqueBienvenida: {
     alignItems: "center",
