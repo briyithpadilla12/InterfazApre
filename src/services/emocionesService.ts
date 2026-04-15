@@ -15,7 +15,7 @@ export interface EmocionAPI {
 function normalizar(raw: Record<string, unknown>): EmocionAPI {
   return {
     emoCodigo: Number(raw.emoCodigo ?? raw.EmoCodigo ?? 0),
-    emoNombre: String(raw.emoNombre ?? raw.EmoNombre ?? ""),
+    emoNombre: String(raw.emoNombre ?? raw.EmoNombre ?? "").trim(),
     emoEmoji: (raw.emoEmoji ?? raw.EmoEmoji ?? null) as string | null,
     emoEscala: Number(raw.emoEscala ?? raw.EmoEscala ?? 5),
     emoColorFondo: (raw.emoColorFondo ?? raw.EmoColorFondo ?? null) as string | null,
@@ -30,7 +30,9 @@ const EmocionesService = {
   async obtenerTodas(): Promise<EmocionAPI[]> {
     const { data } = await api.get<unknown>("/Emociones");
     if (!Array.isArray(data)) return [];
-    return data.map((item) => normalizar(item as Record<string, unknown>));
+    return data
+      .map((item) => normalizar(item as Record<string, unknown>))
+      .filter((e) => (e.emoEstadoRegistro || "").toLowerCase() === "activo");
   },
 };
 

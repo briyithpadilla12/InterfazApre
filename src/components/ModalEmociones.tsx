@@ -1,5 +1,4 @@
 import { useEmociones } from "@/src/context/emocionesContext";
-import { EMOCIONES_DIARIO } from "@/src/constants/emocionesDiario";
 import {
   ActivityIndicator,
   Modal,
@@ -13,8 +12,9 @@ import {
 interface ModalEmocionesProps {
   visible: boolean;
   onClose: () => void;
-  seleccionadas: string[];
-  onToggle: (emocion: string) => void;
+  /** Códigos `emoCodigo` de la API (mismo catálogo que gestión de emociones). */
+  seleccionadas: number[];
+  onToggle: (emoCodigo: number) => void;
 }
 
 export default function ModalEmociones({
@@ -23,21 +23,7 @@ export default function ModalEmociones({
   seleccionadas,
   onToggle,
 }: ModalEmocionesProps) {
-  const { emociones, cargando } = useEmociones();
-
-  const items = emociones.length > 0
-    ? emociones.map((e) => ({
-        id: e.emoCodigo,
-        texto: e.emoNombre,
-        emoji: e.emoEmoji ?? "❓",
-        colorFondo: e.emoColorFondo ?? "#f9fafb",
-      }))
-    : EMOCIONES_DIARIO.map((e, i) => ({
-        id: i + 1,
-        texto: e.texto,
-        emoji: e.emoji,
-        colorFondo: e.colorFondo,
-      }));
+  const { emociones, cargando, error, recargar } = useEmociones();
 
   return (
     <Modal
@@ -49,9 +35,28 @@ export default function ModalEmociones({
       <View style={estilos.superposicion}>
         <View style={estilos.contenedorModal}>
           <Text style={estilos.titulo}>¿Cómo te sientes hoy?</Text>
+          <Text style={estilos.subtitulo}>
+            Las mismas emociones que configura el equipo en gestión de emociones.
+          </Text>
 
           {cargando ? (
             <ActivityIndicator size="large" color="#085394" style={{ marginVertical: 40 }} />
+          ) : error ? (
+            <View style={estilos.estadoVacio}>
+              <Text style={estilos.textoError}>{error}</Text>
+              <Pressable style={estilos.botonReintentar} onPress={() => void recargar()}>
+                <Text style={estilos.textoBotonReintentar}>Reintentar</Text>
+              </Pressable>
+            </View>
+          ) : emociones.length === 0 ? (
+            <View style={estilos.estadoVacio}>
+              <Text style={estilos.textoEstadoVacio}>
+                No hay emociones activas en el sistema. Un administrador puede crearlas en gestión de emociones.
+              </Text>
+              <Pressable style={estilos.botonReintentar} onPress={() => void recargar()}>
+                <Text style={estilos.textoBotonReintentar}>Actualizar lista</Text>
+              </Pressable>
+            </View>
           ) : (
             <ScrollView
               style={estilos.lista}
@@ -59,26 +64,28 @@ export default function ModalEmociones({
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              {items.map((item) => {
-                const seleccionada = seleccionadas.includes(item.texto);
+              {emociones.map((e) => {
+                const seleccionada = seleccionadas.includes(e.emoCodigo);
+                const colorFondo = e.emoColorFondo ?? "#f9fafb";
+                const emoji = e.emoEmoji ?? "❓";
                 return (
                   <Pressable
-                    key={item.id}
+                    key={e.emoCodigo}
                     style={[
                       estilos.celda,
-                      seleccionada && { backgroundColor: item.colorFondo },
+                      seleccionada && { backgroundColor: colorFondo },
                     ]}
-                    onPress={() => onToggle(item.texto)}
+                    onPress={() => onToggle(e.emoCodigo)}
                   >
-                    <Text style={estilos.emoji}>{item.emoji}</Text>
+                    <Text style={estilos.emoji}>{emoji}</Text>
                     <Text
                       style={[
                         estilos.textoEmocion,
                         seleccionada && estilos.textoSeleccionado,
                       ]}
-                      numberOfLines={1}
+                      numberOfLines={2}
                     >
-                      {item.texto}
+                      {e.emoNombre.trim()}
                     </Text>
                   </Pressable>
                 );
@@ -115,7 +122,13 @@ const estilos = StyleSheet.create({
     fontWeight: "700",
     color: "#111",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 8,
+  },
+  subtitulo: {
+    fontSize: 12,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 14,
   },
   lista: {
     maxHeight: 380,
@@ -131,7 +144,7 @@ const estilos = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderRadius: 12,
     marginBottom: 10,
     backgroundColor: "#f9fafb",
@@ -143,7 +156,8 @@ const estilos = StyleSheet.create({
     marginRight: 8,
   },
   textoEmocion: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 15,
     color: "#374151",
     fontWeight: "500",
   },
@@ -160,6 +174,35 @@ const estilos = StyleSheet.create({
   textoBotonCerrar: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "600",
+  },
+  estadoVacio: {
+    paddingVertical: 24,
+    paddingHorizontal: 8,
+    alignItems: "center",
+  },
+  textoEstadoVacio: {
+    fontSize: 14,
+    color: "#4b5563",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  textoError: {
+    fontSize: 14,
+    color: "#b91c1c",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  botonReintentar: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: "#e0f2fe",
+  },
+  textoBotonReintentar: {
+    color: "#085394",
+    fontSize: 15,
     fontWeight: "600",
   },
 });

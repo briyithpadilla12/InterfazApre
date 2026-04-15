@@ -1,11 +1,11 @@
 import ModalEmociones from "@/src/components/ModalEmociones";
-import { EMOCION_ID } from "@/src/constants/emocionesDiario";
 import { useEmociones } from "@/src/context/emocionesContext";
 import { useDiarioViewModel } from "@/src/viewModels/diarioViewModel";
 import { usePaginaDiarioViewModel } from "@/src/viewModels/paginaDiarioViewModel";
 import Feather from "@expo/vector-icons/Feather";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -34,8 +34,9 @@ export default function NuevaPaginaDiarioScreen() {
   const { diario, asegurarDiario, error: errorDiario } = useDiarioViewModel();
   const { guardarPagina, cargando, error: errorGuardar, exito, reset } = usePaginaDiarioViewModel();
 
-  const { emociones: emocionesAPI } = useEmociones();
-  const [emocionesSeleccionadas, setEmocionesSeleccionadas] = useState<string[]>([]);
+  const { emociones: emocionesAPI, recargar: recargarEmociones } = useEmociones();
+  /** Códigos `emoCodigo` del catálogo de la API (gestión de emociones). */
+  const [codigosEmocionSeleccionados, setCodigosEmocionSeleccionados] = useState<number[]>([]);
   const [pagTitulo, setPagTitulo] = useState("");
   const [contenidoDiario, setContenidoDiario] = useState("");
   const [modalEmocionesVisible, setModalEmocionesVisible] = useState(false);
@@ -46,11 +47,17 @@ export default function NuevaPaginaDiarioScreen() {
     asegurarDiario();
   }, []);
 
-  const alternarEmocion = (emocion: string) => {
-    setEmocionesSeleccionadas((prev) =>
-      prev.includes(emocion)
-        ? prev.filter((e) => e !== emocion)
-        : [...prev, emocion]
+  useFocusEffect(
+    useCallback(() => {
+      void recargarEmociones();
+    }, [recargarEmociones])
+  );
+
+  const alternarEmocion = (emoCodigo: number) => {
+    setCodigosEmocionSeleccionados((prev) =>
+      prev.includes(emoCodigo)
+        ? prev.filter((c) => c !== emoCodigo)
+        : [...prev, emoCodigo]
     );
   };
 
@@ -63,14 +70,10 @@ export default function NuevaPaginaDiarioScreen() {
       if (errorDiario) Alert.alert("Error", errorDiario);
       return;
     }
-    const primeraEmocion = emocionesSeleccionadas[0];
-    const emocionAPI = primeraEmocion
-      ? emocionesAPI.find((e) => e.emoNombre === primeraEmocion)
-      : undefined;
-    const pagEmocionFk = emocionAPI
-      ? emocionAPI.emoCodigo
-      : primeraEmocion
-        ? (EMOCION_ID[primeraEmocion] ?? 1)
+    const primeraCodigo = codigosEmocionSeleccionados[0];
+    const pagEmocionFk =
+      primeraCodigo != null && emocionesAPI.some((e) => e.emoCodigo === primeraCodigo)
+        ? primeraCodigo
         : 0;
     const payload = {
       pagTitulo: pagTitulo.trim(),
@@ -83,7 +86,7 @@ export default function NuevaPaginaDiarioScreen() {
     if (ok) {
       setPagTitulo("");
       setContenidoDiario("");
-      setEmocionesSeleccionadas([]);
+      setCodigosEmocionSeleccionados([]);
       router.replace("/(drawer)/diarioScreen");
     } else if (errorGuardar) {
       Alert.alert("Error al guardar", errorGuardar);
@@ -124,7 +127,16 @@ export default function NuevaPaginaDiarioScreen() {
             style={styles.botonSeleccionarEmocion}
             onPress={() => setModalEmocionesVisible(true)}
           >
-            <Text style={styles.botonSeleccionarEmocionTexto}>😊 Seleccionar emoción</Text>
+            <Text style={styles.botonSeleccionarEmocionTexto}>
+              {codigosEmocionSeleccionados.length === 0
+                ? "😊 Seleccionar emoción"
+                : codigosEmocionSeleccionados
+                    .map(
+                      (c) =>
+                        emocionesAPI.find((e) => e.emoCodigo === c)?.emoNombre?.trim() ?? `#${c}`
+                    )
+                    .join(", ")}
+            </Text>
           </Pressable>
 
           <Text style={styles.subtitulo}>Título de esta página</Text>
@@ -172,7 +184,7 @@ export default function NuevaPaginaDiarioScreen() {
         <ModalEmociones
           visible={modalEmocionesVisible}
           onClose={() => setModalEmocionesVisible(false)}
-          seleccionadas={emocionesSeleccionadas}
+          seleccionadas={codigosEmocionSeleccionados}
           onToggle={alternarEmocion}
         />
       </KeyboardAvoidingView>
