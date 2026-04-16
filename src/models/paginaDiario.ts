@@ -3,6 +3,7 @@ export interface PaginaDiario {
   pagContenido: string;
   pagDiarioFk: number;
   pagEmocionFk: number;
+  pagImagenUrl?: string;
 }
 
 /** Payload para PUT /PaginaDiario/editar/:id (pagImagenUrl opcional cuando se defina). */

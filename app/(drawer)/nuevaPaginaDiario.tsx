@@ -1,12 +1,16 @@
 import ModalEmociones from "@/src/components/ModalEmociones";
 import { useEmociones } from "@/src/context/emocionesContext";
+import { subirImagenDesdeUri } from "@/src/services/imagenService";
+import { elegirImagen } from "@/src/utils/elegirImagen";
 import { useDiarioViewModel } from "@/src/viewModels/diarioViewModel";
 import { usePaginaDiarioViewModel } from "@/src/viewModels/paginaDiarioViewModel";
 import Feather from "@expo/vector-icons/Feather";
 import { useFocusEffect } from "@react-navigation/native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -40,6 +44,9 @@ export default function NuevaPaginaDiarioScreen() {
   const [pagTitulo, setPagTitulo] = useState("");
   const [contenidoDiario, setContenidoDiario] = useState("");
   const [modalEmocionesVisible, setModalEmocionesVisible] = useState(false);
+  const [imagenLocalUri, setImagenLocalUri] = useState<string | null>(null);
+  const [pagImagenUrl, setPagImagenUrl] = useState<string | null>(null);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
 
   const fechaHoy = formatearFecha(new Date());
 
@@ -61,11 +68,30 @@ export default function NuevaPaginaDiarioScreen() {
     );
   };
 
+  const manejarAgregarImagen = async () => {
+    const resultado = await elegirImagen();
+    if (!resultado) return;
+    setImagenLocalUri(resultado.uri);
+    setSubiendoImagen(true);
+    try {
+      const { url } = await subirImagenDesdeUri(resultado.uri, resultado.mimeType, "diario_pagina");
+      setPagImagenUrl(url);
+    } catch (err) {
+      Alert.alert("Error al subir imagen", (err as Error).message);
+      setImagenLocalUri(null);
+    } finally {
+      setSubiendoImagen(false);
+    }
+  };
+
+  const quitarImagen = () => {
+    setImagenLocalUri(null);
+    setPagImagenUrl(null);
+  };
+
   const manejarGuardar = async () => {
     reset();
     const d = diario ?? (await asegurarDiario());
-    console.log("[DEBUG nuevaPaginaDiario.manejarGuardar] d (diario):", d ? { diaId: d.diaId, diaTitulo: d.diaTitulo } : null);
-    console.log("[DEBUG nuevaPaginaDiario.manejarGuardar] d.diaId valor y tipo:", d?.diaId, typeof d?.diaId);
     if (!d) {
       if (errorDiario) Alert.alert("Error", errorDiario);
       return;
@@ -80,14 +106,16 @@ export default function NuevaPaginaDiarioScreen() {
       pagContenido: contenidoDiario.trim(),
       pagDiarioFk: d.diaId,
       pagEmocionFk,
+      ...(pagImagenUrl ? { pagImagenUrl } : {}),
     };
-    console.log("[DEBUG nuevaPaginaDiario.manejarGuardar] Payload a guardarPagina:", payload);
     const ok = await guardarPagina(payload);
     if (ok) {
       setPagTitulo("");
       setContenidoDiario("");
       setCodigosEmocionSeleccionados([]);
-      router.replace("/(drawer)/diarioScreen");
+      setImagenLocalUri(null);
+      setPagImagenUrl(null);
+      router.navigate("/(drawer)/diarioScreen");
     } else if (errorGuardar) {
       Alert.alert("Error al guardar", errorGuardar);
     }
@@ -167,13 +195,38 @@ export default function NuevaPaginaDiarioScreen() {
             onChangeText={setContenidoDiario}
           />
 
+          <Text style={styles.subtitulo}>Imagen (opcional)</Text>
+          {imagenLocalUri ? (
+            <View style={styles.imagenPreviewContenedor}>
+              <Image
+                source={{ uri: imagenLocalUri }}
+                style={styles.imagenPreview}
+                contentFit="cover"
+              />
+              {subiendoImagen && (
+                <View style={styles.imagenOverlay}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.imagenOverlayTexto}>Subiendo…</Text>
+                </View>
+              )}
+              <Pressable style={styles.botonQuitarImagen} onPress={quitarImagen}>
+                <Feather name="x-circle" size={24} color="#b91c1c" />
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable style={styles.botonAgregarImagen} onPress={manejarAgregarImagen}>
+              <Feather name="camera" size={20} color={COLOR_PRINCIPAL} />
+              <Text style={styles.botonAgregarImagenTexto}>Agregar foto</Text>
+            </Pressable>
+          )}
+
           {(errorDiario || errorGuardar) && (
             <Text style={styles.textoError}>{errorDiario || errorGuardar}</Text>
           )}
           <Pressable
-            style={[styles.botonGuardar, cargando && styles.botonGuardarDisabled]}
+            style={[styles.botonGuardar, (cargando || subiendoImagen) && styles.botonGuardarDisabled]}
             onPress={manejarGuardar}
-            disabled={cargando}
+            disabled={cargando || subiendoImagen}
           >
             <Text style={styles.textoBotonGuardar}>
               {cargando ? "Guardando…" : "Guardar"}
@@ -336,5 +389,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
     textAlign: "center",
+  },
+  imagenPreviewContenedor: {
+    position: "relative",
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  imagenPreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 14,
+  },
+  imagenOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagenOverlayTexto: {
+    color: "#fff",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  botonQuitarImagen: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 2,
+  },
+  botonAgregarImagen: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#fff",
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderStyle: "dashed",
+    marginBottom: 8,
+  },
+  botonAgregarImagenTexto: {
+    color: COLOR_PRINCIPAL,
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

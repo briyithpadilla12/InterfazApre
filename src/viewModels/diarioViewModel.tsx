@@ -12,7 +12,6 @@ export function useDiarioViewModel() {
 
   const asegurarDiario = useCallback(async (): Promise<Diario | null> => {
     const userId = obtenerUserIdDesdeToken(token);
-    console.log("[DEBUG useDiarioViewModel.asegurarDiario] userId desde token:", userId, "| token presente:", !!token);
     if (!userId) {
       setError("No se pudo obtener el usuario para crear el diario");
       return null;
@@ -26,31 +25,17 @@ export function useDiarioViewModel() {
       const userIdNum = Number(userId);
       const miDiario = activos.find((d) => d.diaAprendizFk === userIdNum);
       if (miDiario) {
-        console.log(
-          "[DEBUG useDiarioViewModel.asegurarDiario] Usando diario del usuario logueado, diaId:",
-          miDiario.diaId,
-          "diaAprendizFk:",
-          miDiario.diaAprendizFk
-        );
         setDiario(miDiario);
         return miDiario;
       }
-      console.log(
-        "[DEBUG useDiarioViewModel.asegurarDiario] No hay diario del usuario",
-        userIdNum,
-        ", creando con diaAprendizFk:",
-        userIdNum
-      );
       const creado = await DiarioService.crearDiario({
         diaTitulo: "Mi diario emocional",
         diaAprendizFk: userIdNum,
       });
       if (creado.diaId) {
-        console.log("[DEBUG useDiarioViewModel.asegurarDiario] Diario creado, diaId:", creado.diaId);
         setDiario(creado);
         return creado;
       }
-      console.log("[DEBUG useDiarioViewModel.asegurarDiario] POST no devolvió ID, recargando activos para obtener el diario creado");
       const activosTrasCrear = await DiarioService.obtenerActivos();
       const miDiarioTrasCrear = activosTrasCrear.find((d) => d.diaAprendizFk === userIdNum);
       if (miDiarioTrasCrear) {
@@ -59,8 +44,7 @@ export function useDiarioViewModel() {
       }
       setDiario(creado);
       return creado;
-    } catch (err) {
-      console.log("[DEBUG useDiarioViewModel.asegurarDiario] Error:", err);
+    } catch {
       setError("No se pudo cargar o crear tu diario. Intenta de nuevo.");
       return null;
     } finally {
@@ -68,11 +52,43 @@ export function useDiarioViewModel() {
     }
   }, [token]);
 
+  /** Actualiza título y/o imagen de portada del diario y refresca el estado local. */
+  const actualizarDiario = useCallback(
+    async (titulo?: string, imagenUrl?: string): Promise<boolean> => {
+      if (!diario) return false;
+      setCargando(true);
+      setError(null);
+      try {
+        await DiarioService.editarDiario(diario.diaId, {
+          diaTitulo: titulo ?? diario.diaTitulo,
+          diaImagenUrl: imagenUrl ?? diario.diaImagenUrl,
+          diaAprendizFk: diario.diaAprendizFk,
+        });
+        setDiario((prev) =>
+          prev
+            ? {
+                ...prev,
+                diaTitulo: titulo ?? prev.diaTitulo,
+                diaImagenUrl: imagenUrl ?? prev.diaImagenUrl,
+              }
+            : prev
+        );
+        return true;
+      } catch {
+        setError("No se pudo actualizar el diario.");
+        return false;
+      } finally {
+        setCargando(false);
+      }
+    },
+    [diario]
+  );
+
   return {
     diario,
     cargando,
     error,
     asegurarDiario,
+    actualizarDiario,
   };
 }
-

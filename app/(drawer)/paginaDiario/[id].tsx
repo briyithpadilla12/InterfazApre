@@ -1,11 +1,13 @@
 import ModalEmociones from "@/src/components/ModalEmociones";
-import { EMOCION_ID } from "@/src/constants/emocionesDiario";
 import { useEmociones } from "@/src/context/emocionesContext";
+import { subirImagenDesdeUri } from "@/src/services/imagenService";
+import { elegirImagen } from "@/src/utils/elegirImagen";
 import { useDiarioViewModel } from "@/src/viewModels/diarioViewModel";
 import { usePaginaDiarioViewModel } from "@/src/viewModels/paginaDiarioViewModel";
 import PaginaDiarioService from "@/src/services/paginaDiarioService";
 import type { PaginaDiarioListaItem } from "@/src/models/paginaDiario";
 import Feather from "@expo/vector-icons/Feather";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -53,8 +55,11 @@ export default function PaginaDiarioDetalleScreen() {
   const [pagina, setPagina] = useState<PaginaDiarioListaItem | null>(null);
   const [pagTitulo, setPagTitulo] = useState("");
   const [contenidoDiario, setContenidoDiario] = useState("");
-  const [emocionesSeleccionadas, setEmocionesSeleccionadas] = useState<string[]>([]);
+  const [codigosEmocionSeleccionados, setCodigosEmocionSeleccionados] = useState<number[]>([]);
   const [modalEmocionesVisible, setModalEmocionesVisible] = useState(false);
+  const [imagenLocalUri, setImagenLocalUri] = useState<string | null>(null);
+  const [pagImagenUrl, setPagImagenUrl] = useState<string | null>(null);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
 
   const cargarPagina = useCallback(async () => {
     setCargandoPagina(true);
@@ -70,9 +75,13 @@ export default function PaginaDiarioDetalleScreen() {
       if (encontrada) {
         setPagTitulo(encontrada.titulo === "Sin título" ? "" : encontrada.titulo);
         setContenidoDiario(encontrada.pagContenido);
-        setEmocionesSeleccionadas(
-          encontrada.emociones.length ? [encontrada.emociones[0]] : []
+        setCodigosEmocionSeleccionados(
+          encontrada.pagEmocionFk ? [encontrada.pagEmocionFk] : []
         );
+        if (encontrada.pagImagenUrl) {
+          setPagImagenUrl(encontrada.pagImagenUrl);
+          setImagenLocalUri(encontrada.pagImagenUrl);
+        }
       }
     } catch {
       setPagina(null);
@@ -88,60 +97,90 @@ export default function PaginaDiarioDetalleScreen() {
   /** Si las emociones cargan después de la página, alinear selección con pagEmocionFk. */
   useEffect(() => {
     if (!pagina || !esEdicion || emocionesAPI.length === 0) return;
-    const emo = emocionesAPI.find((e) => e.emoCodigo === pagina.pagEmocionFk);
-    if (emo) {
-      setEmocionesSeleccionadas((prev) =>
-        prev.length === 0 ? [emo.emoNombre] : prev
+    if (pagina.pagEmocionFk && emocionesAPI.some((e) => e.emoCodigo === pagina.pagEmocionFk)) {
+      setCodigosEmocionSeleccionados((prev) =>
+        prev.length === 0 ? [pagina.pagEmocionFk] : prev
       );
     }
   }, [pagina, esEdicion, emocionesAPI]);
 
-  const alternarEmocion = (emocion: string) => {
-    setEmocionesSeleccionadas((prev) =>
-      prev.includes(emocion)
-        ? prev.filter((e) => e !== emocion)
-        : [...prev, emocion]
+  const alternarEmocion = (emoCodigo: number) => {
+    setCodigosEmocionSeleccionados((prev) =>
+      prev.includes(emoCodigo)
+        ? prev.filter((c) => c !== emoCodigo)
+        : [...prev, emoCodigo]
     );
   };
+
+  const emocionSeleccionadaInfo = useMemo(() => {
+    const cod = codigosEmocionSeleccionados[0];
+    if (!cod) return null;
+    return emocionesAPI.find((e) => e.emoCodigo === cod) ?? null;
+  }, [codigosEmocionSeleccionados, emocionesAPI]);
+
+  /** Info de la emoción de la página para mostrar en lectura (emoji + nombre). */
+  const emocionDePagina = useMemo(() => {
+    if (!pagina?.pagEmocionFk || emocionesAPI.length === 0) return null;
+    return emocionesAPI.find((e) => e.emoCodigo === pagina.pagEmocionFk) ?? null;
+  }, [pagina, emocionesAPI]);
 
   const fechaMostrar = useMemo(
     () => (pagina ? formatearFechaLista(pagina.fecha) : ""),
     [pagina]
   );
 
+  const manejarAgregarImagen = async () => {
+    const resultado = await elegirImagen();
+    if (!resultado) return;
+    setImagenLocalUri(resultado.uri);
+    setSubiendoImagen(true);
+    try {
+      const { url } = await subirImagenDesdeUri(resultado.uri, resultado.mimeType, "diario_pagina");
+      setPagImagenUrl(url);
+    } catch (err) {
+      Alert.alert("Error al subir imagen", (err as Error).message);
+      setImagenLocalUri(pagina?.pagImagenUrl ?? null);
+      setPagImagenUrl(pagina?.pagImagenUrl ?? null);
+    } finally {
+      setSubiendoImagen(false);
+    }
+  };
+
+  const quitarImagen = () => {
+    setImagenLocalUri(null);
+    setPagImagenUrl(null);
+  };
+
   const manejarGuardarEdicion = async () => {
     if (!pagina || !diario?.diaId) return;
     reset();
-    const primeraEmocion = emocionesSeleccionadas[0];
-    const emocionAPI = primeraEmocion
-      ? emocionesAPI.find((e) => e.emoNombre === primeraEmocion)
-      : undefined;
-    const pagEmocionFk = emocionAPI
-      ? emocionAPI.emoCodigo
-      : primeraEmocion
-        ? (EMOCION_ID[primeraEmocion] ?? pagina.pagEmocionFk)
-        : 0;
+    const pagEmocionFk = codigosEmocionSeleccionados[0] ?? 0;
 
     const payload = {
       pagTitulo: pagTitulo.trim(),
       pagContenido: contenidoDiario.trim(),
       pagDiarioFk: diario.diaId,
       pagEmocionFk,
+      pagImagenUrl: pagImagenUrl ?? undefined,
     };
 
     const res = await actualizarPagina(pagina.id, payload);
     if (res.ok) {
-      router.replace("/(drawer)/diarioScreen");
+      volverAlDiario();
     } else {
       Alert.alert("Error al guardar", res.error);
     }
+  };
+
+  const volverAlDiario = () => {
+    router.navigate("/(drawer)/diarioScreen");
   };
 
   if (!Number.isFinite(idNum) || idNum <= 0) {
     return (
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
         <Text style={styles.errorCentro}>Identificador no válido</Text>
-        <Pressable style={styles.botonVolver} onPress={() => router.back()}>
+        <Pressable style={styles.botonVolver} onPress={volverAlDiario}>
           <Text style={styles.botonVolverTexto}>Volver</Text>
         </Pressable>
       </SafeAreaView>
@@ -161,7 +200,7 @@ export default function PaginaDiarioDetalleScreen() {
   if (!pagina) {
     return (
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-        <Pressable style={styles.barraSuperior} onPress={() => router.back()} hitSlop={12}>
+        <Pressable style={styles.barraSuperior} onPress={volverAlDiario} hitSlop={12}>
           <Feather name="chevron-left" size={28} color={COLOR_PRINCIPAL} />
           <Text style={styles.barraTitulo}>Página</Text>
         </Pressable>
@@ -178,7 +217,7 @@ export default function PaginaDiarioDetalleScreen() {
   if (!esEdicion) {
     return (
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-        <Pressable style={styles.barraSuperior} onPress={() => router.back()} hitSlop={12}>
+        <Pressable style={styles.barraSuperior} onPress={volverAlDiario} hitSlop={12}>
           <Feather name="chevron-left" size={28} color={COLOR_PRINCIPAL} />
           <Text style={styles.barraTitulo} numberOfLines={1}>
             {pagina.titulo}
@@ -190,15 +229,22 @@ export default function PaginaDiarioDetalleScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.metaFecha}>{fechaMostrar}</Text>
-          {pagina.emociones.length > 0 && (
+          {emocionDePagina && (
             <View style={styles.filaChips}>
-              {pagina.emociones.map((e) => (
-                <View key={e} style={styles.chip}>
-                  <Text style={styles.chipTexto}>{e}</Text>
-                </View>
-              ))}
+              <View style={[styles.chip, emocionDePagina.emoColorFondo ? { backgroundColor: emocionDePagina.emoColorFondo } : undefined]}>
+                <Text style={styles.chipTexto}>
+                  {emocionDePagina.emoEmoji ?? ''} {emocionDePagina.emoNombre}
+                </Text>
+              </View>
             </View>
           )}
+          {pagina.pagImagenUrl ? (
+            <Image
+              source={{ uri: pagina.pagImagenUrl }}
+              style={styles.imagenLectura}
+              contentFit="cover"
+            />
+          ) : null}
           <Text style={styles.tituloLectura}>{pagina.titulo}</Text>
           <Text style={styles.cuerpoLectura}>{pagina.pagContenido || "Sin contenido."}</Text>
         </ScrollView>
@@ -213,7 +259,7 @@ export default function PaginaDiarioDetalleScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <Pressable style={styles.barraSuperior} onPress={() => router.back()} hitSlop={12}>
+        <Pressable style={styles.barraSuperior} onPress={volverAlDiario} hitSlop={12}>
           <Feather name="chevron-left" size={28} color={COLOR_PRINCIPAL} />
           <Text style={styles.barraTitulo}>Editar página</Text>
         </Pressable>
@@ -234,7 +280,11 @@ export default function PaginaDiarioDetalleScreen() {
             style={styles.botonSeleccionarEmocion}
             onPress={() => setModalEmocionesVisible(true)}
           >
-            <Text style={styles.botonSeleccionarEmocionTexto}>😊 Seleccionar emoción</Text>
+            <Text style={styles.botonSeleccionarEmocionTexto}>
+              {emocionSeleccionadaInfo
+                ? `${emocionSeleccionadaInfo.emoEmoji ?? '😊'} ${emocionSeleccionadaInfo.emoNombre}`
+                : '😊 Seleccionar emoción'}
+            </Text>
           </Pressable>
 
           <Text style={styles.subtitulo}>Título de esta página</Text>
@@ -258,14 +308,39 @@ export default function PaginaDiarioDetalleScreen() {
             onChangeText={setContenidoDiario}
           />
 
+          <Text style={styles.subtitulo}>Imagen (opcional)</Text>
+          {imagenLocalUri ? (
+            <View style={styles.imagenPreviewContenedor}>
+              <Image
+                source={{ uri: imagenLocalUri }}
+                style={styles.imagenPreview}
+                contentFit="cover"
+              />
+              {subiendoImagen && (
+                <View style={styles.imagenOverlay}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.imagenOverlayTexto}>Subiendo…</Text>
+                </View>
+              )}
+              <Pressable style={styles.botonQuitarImagen} onPress={quitarImagen}>
+                <Feather name="x-circle" size={24} color="#b91c1c" />
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable style={styles.botonAgregarImagen} onPress={manejarAgregarImagen}>
+              <Feather name="camera" size={20} color={COLOR_PRINCIPAL} />
+              <Text style={styles.botonAgregarImagenTexto}>Agregar foto</Text>
+            </Pressable>
+          )}
+
           {(errorDiario || errorGuardar) && (
             <Text style={styles.textoError}>{errorDiario || errorGuardar}</Text>
           )}
 
           <Pressable
-            style={[styles.botonGuardar, cargando && styles.botonGuardarDisabled]}
+            style={[styles.botonGuardar, (cargando || subiendoImagen) && styles.botonGuardarDisabled]}
             onPress={manejarGuardarEdicion}
-            disabled={cargando}
+            disabled={cargando || subiendoImagen}
           >
             <Text style={styles.textoBotonGuardar}>
               {cargando ? "Guardando…" : "Guardar cambios"}
@@ -276,7 +351,7 @@ export default function PaginaDiarioDetalleScreen() {
         <ModalEmociones
           visible={modalEmocionesVisible}
           onClose={() => setModalEmocionesVisible(false)}
-          seleccionadas={emocionesSeleccionadas}
+          seleccionadas={codigosEmocionSeleccionados}
           onToggle={alternarEmocion}
         />
       </KeyboardAvoidingView>
@@ -463,6 +538,60 @@ const styles = StyleSheet.create({
   },
   botonVolverTexto: {
     color: "#fff",
+    fontWeight: "600",
+  },
+  imagenLectura: {
+    width: "100%",
+    height: 220,
+    borderRadius: 14,
+    marginBottom: 16,
+  },
+  imagenPreviewContenedor: {
+    position: "relative",
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  imagenPreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 14,
+  },
+  imagenOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagenOverlayTexto: {
+    color: "#fff",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  botonQuitarImagen: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 2,
+  },
+  botonAgregarImagen: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#fff",
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderStyle: "dashed",
+    marginBottom: 8,
+  },
+  botonAgregarImagenTexto: {
+    color: COLOR_PRINCIPAL,
+    fontSize: 15,
     fontWeight: "600",
   },
 });

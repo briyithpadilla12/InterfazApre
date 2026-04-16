@@ -159,7 +159,11 @@ function mapearItemListaCompleta(item: ItemPaginaCrudo): PaginaDiarioListaItem |
       diarioAnidado?.DiaId ??
       0
   );
-  const pagEmocionFk = Number(raw.pagEmocionFk ?? raw.PagEmocionFk ?? 0);
+  const pagEmocionFk = Number(
+    raw.pagEmocionFk ?? raw.PagEmocionFk ??
+    emocionObj?.emoCodigo ?? emocionObj?.EmoCodigo ??
+    0
+  );
   const pagImagenUrlRaw = raw.pagImagenUrl ?? raw.PagImagenUrl;
   const pagImagenUrl =
     typeof pagImagenUrlRaw === "string" && pagImagenUrlRaw.trim() ? pagImagenUrlRaw.trim() : undefined;

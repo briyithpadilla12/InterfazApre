@@ -42,7 +42,14 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Healthy Mind necesita acceso a tus fotos para adjuntar imágenes a tu diario.",
+          "cameraPermission": "Healthy Mind necesita acceso a la cámara para tomar fotos y adjuntarlas a tu diario."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
