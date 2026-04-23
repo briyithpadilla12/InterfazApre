@@ -1,5 +1,4 @@
 import Accordion from "@/src/components/AcordionConfi";
-import Feather from "@expo/vector-icons/Feather";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const preguntas = [
@@ -59,10 +58,6 @@ export default function PreguntasFrecuentesScreen() {
   return (
     <ScrollView style={styles.pantalla} contentContainerStyle={styles.contenido}>
       <View style={styles.encabezado}>
-        <View style={styles.filaTitulo}>
-          <Feather name="help-circle" size={22} color="#0B4F8A" />
-          <Text style={styles.titulo}>Preguntas frecuentes</Text>
-        </View>
         <Text style={styles.descripcion}>
           Encuentra respuestas rápidas sobre el uso de Healthy Mind y el alcance
           del acompañamiento ofrecido.
@@ -89,6 +84,7 @@ const styles = StyleSheet.create({
   },
   contenido: {
     padding: 16,
+
     paddingBottom: 30,
   },
   encabezado: {
@@ -98,17 +94,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     borderWidth: 1,
     borderColor: "#D0E2FF",
-  },
-  filaTitulo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#0C3D78",
   },
   descripcion: {
     fontSize: 14,

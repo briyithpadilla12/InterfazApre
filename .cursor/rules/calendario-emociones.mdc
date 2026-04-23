@@ -1,0 +1,46 @@
+---
+description: Contexto del feature "Calendario de emociones" — usar cuando el usuario diga «calendario emociones» o antes de implementar esa pantalla.
+alwaysApply: false
+---
+
+# Calendario de emociones — contexto acordado (no implementado aún)
+
+**Palabra clave:** el usuario puede retomar el hilo diciendo *calendario emociones*; conviene **@mencionar esta regla** en Cursor para cargar el contexto completo.
+
+## Objetivo
+
+Implementar una pantalla de **calendario de emociones** (nueva ruta bajo `app/(drawer)/(tabs)/` cuando se aborde; la tab **Calendario** fue sustituida por **Citas**): consultar emociones del usuario **por día**, alineado con el **diario**.
+
+## UI (referencias acordadas)
+
+- **Título:** calendario de emociones.
+- **Zona superior:** leyenda **plana** con los mismos emojis/emociones que el diario (catálogo API `/Emociones` vía `useEmociones`). **Solo visualización**, sin filtros ni otras acciones.
+- **Calendario mensual:** navegación mes anterior/siguiente; días con datos marcados visualmente (ej. fondo + indicador).
+- **Tap en un día:**
+  - Si **hay** registros: modal con título tipo "Emociones del día X", lista vertical emoji + nombre, botón cerrar.
+  - Si **no hay** nada ese día: mismo flujo modal con **mensaje claro** de que no hay registros (no lista vacía confusa).
+
+## Reglas de negocio (fecha = día calendario, no hora)
+
+- Granularidad **por día** (no por hora).
+- Si el usuario creó/edición en el diario y eligió **varias** emociones, el calendario debe reflejar **la unión** de emociones de ese **día**.
+- Si vuelve a entrar **más tarde el mismo día** y añade emociones, deben **sumarse** a las ya mostradas ese mismo día.
+- Si **quita** una emoción en el diario, debe **desaparecer** del calendario para ese día.
+
+## Arquitectura deseada (patrón del proyecto)
+
+- `models` → tipos si hace falta.
+- `services` → reutilizar `PaginaDiarioService` / endpoints existentes; posible método o params por rango de fechas según API.
+- Utilidad **`agruparEmocionesPorDia`**: unión por `YYYY-MM-DD` de emociones de todas las páginas de ese día.
+- Hook tipo **`useCalendarioEmocionesViewModel`**: mes visible, carga, error, mapa día → emociones, modal.
+- Componentes: leyenda solo lectura, rejilla mes, modal detalle / vacío.
+- Refresco al volver del diario (`useFocusEffect`) para ver cambios al instante.
+
+## Bloqueo técnico conocido (revisar con backend antes de implementar)
+
+En **`nuevaPaginaDiario.tsx`** la UI permite varias emociones pero al guardar solo se envía **`pagEmocionFk`** con la **primera**. El modelo **`PaginaDiario`** tiene una sola FK. Para cumplir "varias emociones por página" y sincronía con el calendario hace falta **alinear contrato API** (varias emociones por página o regla explícita de agregación). Sin eso, el calendario no puede ser fiel a la selección múltiple en una sola página.
+
+## Estado
+
+- **No** se ha implementado código de calendario aún; el usuario debe **autorizar** cambios antes de proceder.
+- Análisis previo del repo (HTTP API, navegación, etc.) es independiente; no forma parte obligatoria de esta regla salvo que se retome.

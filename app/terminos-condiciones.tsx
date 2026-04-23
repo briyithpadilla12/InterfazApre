@@ -68,7 +68,6 @@ export default function TerminosCondicionesScreen() {
     <ScrollView style={styles.pantalla} contentContainerStyle={styles.contenido}>
       <View style={styles.bloqueEncabezado}>
         <Text style={styles.etiqueta}>Aplicación: Healthy Mind</Text>
-        <Text style={styles.titulo}>Términos y condiciones de uso</Text>
         <Text style={styles.descripcion}>
           Este documento establece las reglas para el uso responsable de la
           aplicación y la relación con el acompañamiento brindado por el SENA.
@@ -106,12 +105,6 @@ const styles = StyleSheet.create({
     color: "#085394",
     fontWeight: "600",
     marginBottom: 4,
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#0C3D78",
-    marginBottom: 8,
   },
   descripcion: {
     fontSize: 14,

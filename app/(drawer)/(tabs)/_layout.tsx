@@ -1,12 +1,7 @@
-import { Tabs } from 'expo-router';
-import { useNavigation } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
-
-import Feather from '@expo/vector-icons/Feather';
-
+import { Tabs } from "expo-router";
+import Feather from "@expo/vector-icons/Feather";
 
 export default function TabLayout() {
-    
   return (
     <Tabs
       initialRouteName="homeScreen"
@@ -35,11 +30,11 @@ export default function TabLayout() {
       />
     
       <Tabs.Screen
-        name="calendarioScreen"
+        name="citasScreen"
         options={{
-          title: 'Calendario',
+          title: "Citas",
           tabBarIcon: ({ color }) => (
-           <Feather name= 'calendar' color={color} size={24} />
+            <Feather name="book-open" color={color} size={24} />
           ),
         }}
       />

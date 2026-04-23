@@ -1,9 +1,8 @@
-import { useEffect, useRef } from "react";
-import { Stack, useRouter } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useAuth } from "@/src/context/authContext";
-import { AuthProvider } from "@/src/context/authContext";
+import { AuthProvider, useAuth } from "@/src/context/authContext";
 import { EmocionesProvider } from "@/src/context/emocionesContext";
+import { Stack, useRouter } from "expo-router";
+import { useEffect, useRef } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 function RootNavigation() {
   const { token, cargando } = useAuth();
@@ -26,66 +25,43 @@ function RootNavigation() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {token === null ? (
-        <>
-          <Stack.Screen name="index" />
-          <Stack.Screen
-            name="terminos-condiciones"
-            options={{ headerShown: true, title: "Términos y condiciones" }}
-          />
-          <Stack.Screen
-            name="politica-privacidad"
-            options={{ headerShown: true, title: "Política de privacidad" }}
-          />
-          <Stack.Screen
-            name="preguntas-frecuentes"
-            options={{ headerShown: true, title: "Preguntas frecuentes" }}
-          />
-          <Stack.Screen
-            name="contactar-soporte"
-            options={{ headerShown: true, title: "Contactar soporte" }}
-          />
-          <Stack.Screen
-            name="cambiarContra"
-            options={{ headerShown: true, title: "Cambiar contraseña" }}
-          />
-          <Stack.Screen
-            name="editarPerfil"
-            options={{ headerShown: true, title: "Editar perfil" }}
-          />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="comprobandoPerfil" options={{ headerShown: false }} />
-          <Stack.Screen name="completarDatos" options={{ headerShown: false }} />
-          <Stack.Screen name="asignarFicha" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="terminos-condiciones"
-            options={{ headerShown: true, title: "Términos y condiciones" }}
-          />
-          <Stack.Screen
-            name="politica-privacidad"
-            options={{ headerShown: true, title: "Política de privacidad" }}
-          />
-          <Stack.Screen
-            name="preguntas-frecuentes"
-            options={{ headerShown: true, title: "Preguntas frecuentes" }}
-          />
-          <Stack.Screen
-            name="contactar-soporte"
-            options={{ headerShown: true, title: "Contactar soporte" }}
-          />
-          <Stack.Screen
-            name="cambiarContra"
-            options={{ headerShown: true, title: "Cambiar contraseña" }}
-          />
-          <Stack.Screen
-            name="editarPerfil"
-            options={{ headerShown: true, title: "Editar perfil" }}
-          />
-          <Stack.Screen name="(drawer)" />
-        </>
-      )}
+      <Stack.Screen name="index" />
+      <Stack.Screen name="comprobandoPerfil" options={{ headerShown: false }} />
+      <Stack.Screen name="completarDatos" options={{ headerShown: false }} />
+      <Stack.Screen name="asignarFicha" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="terminos-condiciones"
+        options={{ headerShown: true, title: "Términos y condiciones", headerTintColor: "#085394", headerTitleAlign: "center" }}
+      />
+      <Stack.Screen
+        name="politica-privacidad"
+        options={{ headerShown: true, title: "Política de privacidad", headerTintColor: "#085394" , headerTitleAlign: "center" }}
+      />
+      <Stack.Screen
+        name="preguntas-frecuentes"
+        options={{ headerShown: true, title: "Preguntas frecuentes" , headerTintColor: "#085394" , headerTitleAlign: "center"}}
+      />
+      <Stack.Screen
+        name="contactar-soporte"
+        options={{ headerShown: true, title: "Contactar soporte", headerTintColor: "#085394" , headerTitleAlign: "center" }}
+      />
+        <Stack.Screen
+        name="reportar-problema"
+        options={{ headerShown: true, title: "Reportar problema", headerTintColor: "#085394" , headerTitleAlign: "center"}}
+      />
+      <Stack.Screen
+        name="cambiarContra"
+        options={{ headerShown: true, title: "Cambiar contraseña", headerTintColor: "#085394", headerTitleAlign: "center" }}
+      />
+      <Stack.Screen
+        name="editarPerfil"
+        options={{ headerShown: true, title: "Editar perfil", headerTintColor: "#085394" , headerTitleAlign: "center"}}
+      />
+      <Stack.Screen
+        name="tutorial-app"
+        options={{ headerShown: true, title: "Tutorial de la app", headerTintColor: "#085394", headerTitleAlign: "center" }}
+      />
+      <Stack.Screen name="(drawer)" />
     </Stack>
   );
 }

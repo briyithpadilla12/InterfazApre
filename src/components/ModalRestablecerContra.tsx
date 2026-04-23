@@ -1,16 +1,16 @@
+import { useRestablecerContraViewModel } from "@/src/viewModels/restablecerContraViewModel";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Keyboard,
   Modal,
+  Pressable,
   StyleSheet,
   Text,
-  Pressable,
-  View,
   TextInput,
-  Keyboard,
   TouchableWithoutFeedback,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import { useState, useEffect } from "react";
-import { useRestablecerContraViewModel } from "@/src/viewModels/restablecerContraViewModel";
 
 interface ModalRestablecerContraProps {
   visible: boolean;
@@ -162,7 +162,7 @@ const estilos = StyleSheet.create({
     backgroundColor: "#fafafa",
   },
   boton: {
-    backgroundColor: "#4f46e5",
+    backgroundColor: "#085394",
     paddingVertical: 13,
     borderRadius: 12,
     alignItems: "center",

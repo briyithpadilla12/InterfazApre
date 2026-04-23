@@ -87,7 +87,25 @@ const perfilAprendizServicio = {
    } catch (error : any) {
        void error;
    }
-  }
+  },
+
+  /**
+   * Cambio de estado del aprendiz (baja lógica).
+   * PUT /api/Aprendiz/cambiar-estado/:documento
+   * Cuerpo: { razonEliminacion } — obligatorio en servidor para rol Aprendiz (RazonEliminacionDTO).
+   */
+  async cambiarEstadoCuentaPorDocumento(
+    documento: string,
+    razonEliminacion: string
+  ): Promise<void> {
+    const doc = documento.trim();
+    const razon = razonEliminacion.trim();
+    if (!doc) throw new Error("documento_requerido");
+    if (!razon) throw new Error("razon_requerida");
+    await api.put(`/Aprendiz/cambiar-estado/${encodeURIComponent(doc)}`, {
+      razonEliminacion: razon,
+    });
+  },
 
 };
 

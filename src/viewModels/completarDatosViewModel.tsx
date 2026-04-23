@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import completarInformacionService, {
   CompletarInformacionPayload,
 } from "@/src/services/completarInformacionService";
+import ciudadService, { type CiudadApi } from "@/src/services/ciudadService";
 
 export interface FormularioCompletarDatos {
   aprFechaNac: string;
@@ -15,7 +16,6 @@ export interface FormularioCompletarDatos {
   aprTelefono: string;
   aprEps: string;
   aprPatologia: string;
-  aprEstadoAprFk: string;
   aprTipoPoblacion: string;
   aprTelefonoAcudiente: string;
   aprAcudNombre: string;
@@ -34,7 +34,6 @@ const VALORES_INICIALES: FormularioCompletarDatos = {
   aprTelefono: "",
   aprEps: "",
   aprPatologia: "",
-  aprEstadoAprFk: "",
   aprTipoPoblacion: "",
   aprTelefonoAcudiente: "",
   aprAcudNombre: "",
@@ -43,6 +42,11 @@ const VALORES_INICIALES: FormularioCompletarDatos = {
 
 export function useCompletarDatosViewModel(documento: string) {
   const [formulario, setFormulario] = useState<FormularioCompletarDatos>(VALORES_INICIALES);
+  const [ciudades, setCiudades] = useState<CiudadApi[]>([]);
+  const [cargandoCiudades, setCargandoCiudades] = useState(false);
+  const [errorCiudades, setErrorCiudades] = useState<string | null>(null);
+  const [busquedaCiudad, setBusquedaCiudad] = useState("");
+  const [mostrarResultadosCiudad, setMostrarResultadosCiudad] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,9 +58,63 @@ export function useCompletarDatosViewModel(documento: string) {
   const esValido = (): boolean => {
     const requeridos: (keyof FormularioCompletarDatos)[] = [
       "aprFechaNac", "aprNombre", "aprApellido", "aprCorreoInstitucional",
-      "aprDireccion", "aprTelefono", "aprAcudNombre", "aprTelefonoAcudiente",
+      "aprDireccion", "aprTelefono", "aprAcudNombre", "aprTelefonoAcudiente", "aprCiudadFk",
     ];
     return requeridos.every((c) => formulario[c]?.trim());
+  };
+
+  useEffect(() => {
+    let activo = true;
+    const cargarCiudades = async () => {
+      setCargandoCiudades(true);
+      setErrorCiudades(null);
+      try {
+        const lista = await ciudadService.obtenerTodas();
+        if (!activo) return;
+        setCiudades(lista);
+      } catch {
+        if (!activo) return;
+        setErrorCiudades("No se pudieron cargar las ciudades. Intenta de nuevo.");
+      } finally {
+        if (activo) setCargandoCiudades(false);
+      }
+    };
+    void cargarCiudades();
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  const normalizar = (txt: string) =>
+    txt
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+  const ciudadesFiltradas = useMemo(() => {
+    const term = normalizar(busquedaCiudad);
+    if (term.length < 3) return [];
+    return ciudades.filter((c) => normalizar(c.ciuNombre).includes(term)).slice(0, 40);
+  }, [busquedaCiudad, ciudades]);
+
+  const ciudadSeleccionada = useMemo(() => {
+    const id = Number(formulario.aprCiudadFk);
+    if (!id) return null;
+    return ciudades.find((c) => c.ciuCodigo === id) ?? null;
+  }, [formulario.aprCiudadFk, ciudades]);
+
+  const seleccionarCiudad = (ciudad: CiudadApi) => {
+    setFormulario((prev) => ({ ...prev, aprCiudadFk: String(ciudad.ciuCodigo) }));
+    setBusquedaCiudad(ciudad.ciuNombre);
+    setMostrarResultadosCiudad(false);
+    setError(null);
+  };
+
+  const cambiarBusquedaCiudad = (texto: string) => {
+    setBusquedaCiudad(texto);
+    setMostrarResultadosCiudad(true);
+    setError(null);
   };
 
   const guardar = async (): Promise<boolean> => {
@@ -85,7 +143,7 @@ export function useCompletarDatosViewModel(documento: string) {
         aprTelefono: formulario.aprTelefono.trim(),
         aprEps: formulario.aprEps.trim(),
         aprPatologia: formulario.aprPatologia.trim(),
-        aprEstadoAprFk: parseInt(formulario.aprEstadoAprFk, 10) || 0,
+        aprEstadoAprFk: 1,
         aprTipoPoblacion: formulario.aprTipoPoblacion.trim(),
         aprTelefonoAcudiente: formulario.aprTelefonoAcudiente.trim(),
         aprAcudNombre: formulario.aprAcudNombre.trim(),
@@ -108,5 +166,21 @@ export function useCompletarDatosViewModel(documento: string) {
     }
   };
 
-  return { formulario, actualizarCampo, cargando, error, guardar, esValido };
+  return {
+    formulario,
+    actualizarCampo,
+    cargando,
+    error,
+    guardar,
+    esValido,
+    busquedaCiudad,
+    setBusquedaCiudad,
+    cambiarBusquedaCiudad,
+    mostrarResultadosCiudad,
+    ciudadesFiltradas,
+    ciudadSeleccionada,
+    seleccionarCiudad,
+    cargandoCiudades,
+    errorCiudades,
+  };
 }

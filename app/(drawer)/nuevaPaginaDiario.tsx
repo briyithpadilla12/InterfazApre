@@ -39,8 +39,8 @@ export default function NuevaPaginaDiarioScreen() {
   const { guardarPagina, cargando, error: errorGuardar, exito, reset } = usePaginaDiarioViewModel();
 
   const { emociones: emocionesAPI, recargar: recargarEmociones } = useEmociones();
-  /** Códigos `emoCodigo` del catálogo de la API (gestión de emociones). */
-  const [codigosEmocionSeleccionados, setCodigosEmocionSeleccionados] = useState<number[]>([]);
+  /** Una sola emoción por página; tocar otra sustituye; tocar la misma quita la selección. */
+  const [emocionSeleccionada, setEmocionSeleccionada] = useState<number | null>(null);
   const [pagTitulo, setPagTitulo] = useState("");
   const [contenidoDiario, setContenidoDiario] = useState("");
   const [modalEmocionesVisible, setModalEmocionesVisible] = useState(false);
@@ -60,12 +60,8 @@ export default function NuevaPaginaDiarioScreen() {
     }, [recargarEmociones])
   );
 
-  const alternarEmocion = (emoCodigo: number) => {
-    setCodigosEmocionSeleccionados((prev) =>
-      prev.includes(emoCodigo)
-        ? prev.filter((c) => c !== emoCodigo)
-        : [...prev, emoCodigo]
-    );
+  const seleccionarEmocionUnica = (emoCodigo: number) => {
+    setEmocionSeleccionada((prev) => (prev === emoCodigo ? null : emoCodigo));
   };
 
   const manejarAgregarImagen = async () => {
@@ -96,11 +92,17 @@ export default function NuevaPaginaDiarioScreen() {
       if (errorDiario) Alert.alert("Error", errorDiario);
       return;
     }
-    const primeraCodigo = codigosEmocionSeleccionados[0];
-    const pagEmocionFk =
-      primeraCodigo != null && emocionesAPI.some((e) => e.emoCodigo === primeraCodigo)
-        ? primeraCodigo
-        : 0;
+    if (
+      emocionSeleccionada == null ||
+      !emocionesAPI.some((e) => e.emoCodigo === emocionSeleccionada)
+    ) {
+      Alert.alert(
+        "Emoción requerida",
+        "Por favor selecciona una emoción y vuelve a intentarlo."
+      );
+      return;
+    }
+    const pagEmocionFk = emocionSeleccionada;
     const payload = {
       pagTitulo: pagTitulo.trim(),
       pagContenido: contenidoDiario.trim(),
@@ -112,7 +114,7 @@ export default function NuevaPaginaDiarioScreen() {
     if (ok) {
       setPagTitulo("");
       setContenidoDiario("");
-      setCodigosEmocionSeleccionados([]);
+      setEmocionSeleccionada(null);
       setImagenLocalUri(null);
       setPagImagenUrl(null);
       router.navigate("/(drawer)/diarioScreen");
@@ -156,14 +158,10 @@ export default function NuevaPaginaDiarioScreen() {
             onPress={() => setModalEmocionesVisible(true)}
           >
             <Text style={styles.botonSeleccionarEmocionTexto}>
-              {codigosEmocionSeleccionados.length === 0
+              {emocionSeleccionada == null
                 ? "😊 Seleccionar emoción"
-                : codigosEmocionSeleccionados
-                    .map(
-                      (c) =>
-                        emocionesAPI.find((e) => e.emoCodigo === c)?.emoNombre?.trim() ?? `#${c}`
-                    )
-                    .join(", ")}
+                : emocionesAPI.find((e) => e.emoCodigo === emocionSeleccionada)?.emoNombre?.trim() ??
+                  `#${emocionSeleccionada}`}
             </Text>
           </Pressable>
 
@@ -237,8 +235,10 @@ export default function NuevaPaginaDiarioScreen() {
         <ModalEmociones
           visible={modalEmocionesVisible}
           onClose={() => setModalEmocionesVisible(false)}
-          seleccionadas={codigosEmocionSeleccionados}
-          onToggle={alternarEmocion}
+          seleccionadas={
+            emocionSeleccionada != null ? [emocionSeleccionada] : []
+          }
+          onToggle={seleccionarEmocionUnica}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,14 +1,82 @@
-import { Link } from 'expo-router';
-import { Text, View, StyleSheet , Pressable} from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import Feather from '@expo/vector-icons/Feather';
-import Accordion from '@/src/components/AcordionConfi';
+import Accordion from "@/src/components/AcordionConfi";
 import ModalEliCuenta from "@/src/components/ModalEliCuenta";
-import React, { useState } from "react";
+import { useAuth } from "@/src/context/authContext";
+import perfilAprendizServicio from "@/src/services/perfilService";
+import { obtenerUserIdDesdeToken } from "@/src/utils/jwt";
+import Feather from "@expo/vector-icons/Feather";
+import { Link, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
+
+function mensajeErrorEliminar(err: unknown): string {
+  const ax = err as { response?: { data?: unknown }; message?: string };
+  if (ax.message === "Network Error" || ax.message?.includes?.("timeout")) {
+    return "Sin conexión. Revisa tu internet e intenta de nuevo.";
+  }
+  const data = ax.response?.data;
+  if (typeof data === "string" && data.trim()) return data;
+  if (data && typeof data === "object" && "message" in data) {
+    const m = (data as { message?: unknown }).message;
+    if (typeof m === "string" && m.trim()) return m;
+  }
+  return "No se pudo dar de baja la cuenta. Intenta de nuevo más tarde.";
+}
 
 export default function ConfiguracionScreen() {
+  const router = useRouter();
+  const { token, logout } = useAuth();
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
-   const [mostrarModal , setMostrarModal] = useState(false)
+  const manejarConfirmarEliminacion = useCallback(async (razonEliminacion: string) => {
+    const razon = razonEliminacion.trim();
+    if (!razon) {
+      Alert.alert(
+        "Razón requerida",
+        "Debes escribir una razón de baja. Es obligatoria para registrar la inactivación."
+      );
+      return;
+    }
+
+    if (!token) {
+      Alert.alert("Sesión", "No hay sesión activa.");
+      return;
+    }
+    const userId = obtenerUserIdDesdeToken(token);
+    if (!userId) {
+      Alert.alert("Error", "No se pudo identificar tu cuenta.");
+      return;
+    }
+
+    setEliminando(true);
+    try {
+      const perfil = await perfilAprendizServicio.obtenerPerfil(userId);
+      const documento = perfil.numeroDocumento?.trim() ?? "";
+      if (!documento) {
+        Alert.alert(
+          "Datos incompletos",
+          "No se encontró tu número de documento en el perfil. Complétalo en «Editar información personal» e intenta de nuevo."
+        );
+        return;
+      }
+      await perfilAprendizServicio.cambiarEstadoCuentaPorDocumento(documento, razon);
+      await logout();
+      setMostrarModal(false);
+      router.replace("/");
+    } catch (err) {
+      Alert.alert("Error", mensajeErrorEliminar(err));
+    } finally {
+      setEliminando(false);
+    }
+  }, [token, logout, router]);
+
   return (
    <ScrollView>
   <View style={styles.container}>
@@ -27,6 +95,8 @@ export default function ConfiguracionScreen() {
       <ModalEliCuenta
         visible={mostrarModal}
         onClose={() => setMostrarModal(false)}
+        onConfirmar={manejarConfirmarEliminacion}
+        cargando={eliminando}
       />
     </View>
     </Accordion>
@@ -38,12 +108,7 @@ export default function ConfiguracionScreen() {
       <Link href="/cambiarContra" ><Text>Cambiar contraseña</Text></Link>
     </Accordion>
 
-    <Accordion
-      title="Notificaciones"
-      icon={<Feather name="bell" size={24} color="#085394" />}
-    >
-      <Link href="/" ><Text>Sonido y vibración</Text></Link>
-    </Accordion>
+    
 
     <Accordion
       title="Soporte y ayuda"
@@ -51,7 +116,8 @@ export default function ConfiguracionScreen() {
     >
       <Link href="/preguntas-frecuentes" ><Text>Preguntas frecuentes</Text></Link>
       <Link href="/contactar-soporte" ><Text>Contactar soporte</Text></Link>
-      <Link href="/" ><Text>Tutorial de la app</Text></Link>
+      <Link href="/reportar-problema" ><Text>Reportar problema</Text></Link>
+      <Link href="/tutorial-app" ><Text>Tutorial de la app</Text></Link>
     </Accordion>
 
     <Accordion

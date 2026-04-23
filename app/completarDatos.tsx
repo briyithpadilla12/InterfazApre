@@ -39,7 +39,21 @@ function renderInput(
 export default function CompletarDatosScreen() {
   const { documento } = useLocalSearchParams<{ documento: string }>();
   const router = useRouter();
-  const { formulario, actualizarCampo, cargando, error, guardar } =
+  const {
+    formulario,
+    actualizarCampo,
+    cargando,
+    error,
+    guardar,
+    busquedaCiudad,
+    cambiarBusquedaCiudad,
+    mostrarResultadosCiudad,
+    ciudadesFiltradas,
+    ciudadSeleccionada,
+    seleccionarCiudad,
+    cargandoCiudades,
+    errorCiudades,
+  } =
     useCompletarDatosViewModel(documento ?? "");
 
   const handleGuardar = async () => {
@@ -84,11 +98,47 @@ export default function CompletarDatosScreen() {
           {renderInput("Segundo apellido", formulario.aprSegundoApellido, (v) => actualizarCampo("aprSegundoApellido", v), "aprSegundoApellido")}
           {renderInput("Correo institucional", formulario.aprCorreoInstitucional, (v) => actualizarCampo("aprCorreoInstitucional", v), "aprCorreoInstitucional", "email-address")}
           {renderInput("Dirección", formulario.aprDireccion, (v) => actualizarCampo("aprDireccion", v), "aprDireccion")}
-          {renderInput("Ciudad (ID)", formulario.aprCiudadFk, (v) => actualizarCampo("aprCiudadFk", v), "aprCiudadFk", "numeric")}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Ciudad</Text>
+            <TextInput
+              style={styles.input}
+              value={busquedaCiudad}
+              onChangeText={cambiarBusquedaCiudad}
+              placeholder={
+                ciudadSeleccionada
+                  ? ciudadSeleccionada.ciuNombre
+                  : "Escribe al menos 3 letras para buscar"
+              }
+              placeholderTextColor="#999"
+            />
+            {cargandoCiudades ? (
+              <Text style={styles.ayudaTexto}>Cargando ciudades...</Text>
+            ) : errorCiudades ? (
+              <Text style={styles.errorInline}>{errorCiudades}</Text>
+            ) : busquedaCiudad.trim().length > 0 && busquedaCiudad.trim().length < 3 ? (
+              <Text style={styles.ayudaTexto}>Escribe al menos 3 letras.</Text>
+            ) : null}
+
+            {mostrarResultadosCiudad && busquedaCiudad.trim().length >= 3 && ciudadesFiltradas.length > 0 ? (
+              <View style={styles.resultadosBox}>
+                {ciudadesFiltradas.map((c) => (
+                  <Pressable
+                    key={c.ciuCodigo}
+                    style={styles.resultadoItem}
+                    onPress={() => seleccionarCiudad(c)}
+                  >
+                    <Text style={styles.resultadoTitulo}>{c.ciuNombre}</Text>
+                    <Text style={styles.resultadoSub}>
+                      {c.regional?.regNombre ?? "Sin regional"}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+          </View>
           {renderInput("Teléfono", formulario.aprTelefono, (v) => actualizarCampo("aprTelefono", v), "aprTelefono", "phone-pad")}
           {renderInput("EPS", formulario.aprEps, (v) => actualizarCampo("aprEps", v), "aprEps")}
           {renderInput("Patología", formulario.aprPatologia, (v) => actualizarCampo("aprPatologia", v), "aprPatologia")}
-          {renderInput("Estado aprendiz (ID)", formulario.aprEstadoAprFk, (v) => actualizarCampo("aprEstadoAprFk", v), "aprEstadoAprFk", "numeric")}
           {renderInput("Tipo de población", formulario.aprTipoPoblacion, (v) => actualizarCampo("aprTipoPoblacion", v), "aprTipoPoblacion")}
           {renderInput("Teléfono acudiente", formulario.aprTelefonoAcudiente, (v) => actualizarCampo("aprTelefonoAcudiente", v), "aprTelefonoAcudiente", "phone-pad")}
           {renderInput("Nombre acudiente", formulario.aprAcudNombre, (v) => actualizarCampo("aprAcudNombre", v), "aprAcudNombre")}
@@ -177,5 +227,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     fontWeight: "500",
+  },
+  ayudaTexto: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#6b7280",
+  },
+  errorInline: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#dc2626",
+  },
+  resultadosBox: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 10,
+    maxHeight: 220,
+    backgroundColor: "#fff",
+  },
+  resultadoItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
+  },
+  resultadoTitulo: {
+    fontSize: 14,
+    color: "#111827",
+    fontWeight: "600",
+  },
+  resultadoSub: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#6b7280",
   },
 });

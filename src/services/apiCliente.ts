@@ -1,6 +1,8 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
-export const API_BASE_URL = "http://healthymind10.runasp.net/api";
+const API_BASE_URL_DEFAULT = "http://healthymind10.runasp.net/api";
+export const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || API_BASE_URL_DEFAULT;
 
 const api = axios.create({
   baseURL: API_BASE_URL,

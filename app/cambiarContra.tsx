@@ -1,7 +1,7 @@
-import { router } from "expo-router";
-import { Pressable, Text, TextInput, View, StyleSheet, ActivityIndicator, Keyboard, TouchableWithoutFeedback, ScrollView } from "react-native";
-import { useState, useEffect, useRef } from "react";
 import { useCambiarContraViewModel } from "@/src/viewModels/cambiarContraViewModel";
+import { router } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 
 export default function CambiarContraseña() {
   const { cambiarPassword, cargando, error, exito, reset } = useCambiarContraViewModel();
@@ -141,10 +141,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   contenedor: {
+    
     flexGrow: 1,
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 20,
-    paddingTop: 30,
+
     paddingBottom: 40,
   },
 

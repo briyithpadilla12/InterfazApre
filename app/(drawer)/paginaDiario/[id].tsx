@@ -55,7 +55,7 @@ export default function PaginaDiarioDetalleScreen() {
   const [pagina, setPagina] = useState<PaginaDiarioListaItem | null>(null);
   const [pagTitulo, setPagTitulo] = useState("");
   const [contenidoDiario, setContenidoDiario] = useState("");
-  const [codigosEmocionSeleccionados, setCodigosEmocionSeleccionados] = useState<number[]>([]);
+  const [emocionSeleccionada, setEmocionSeleccionada] = useState<number | null>(null);
   const [modalEmocionesVisible, setModalEmocionesVisible] = useState(false);
   const [imagenLocalUri, setImagenLocalUri] = useState<string | null>(null);
   const [pagImagenUrl, setPagImagenUrl] = useState<string | null>(null);
@@ -75,8 +75,8 @@ export default function PaginaDiarioDetalleScreen() {
       if (encontrada) {
         setPagTitulo(encontrada.titulo === "Sin título" ? "" : encontrada.titulo);
         setContenidoDiario(encontrada.pagContenido);
-        setCodigosEmocionSeleccionados(
-          encontrada.pagEmocionFk ? [encontrada.pagEmocionFk] : []
+        setEmocionSeleccionada(
+          encontrada.pagEmocionFk ? encontrada.pagEmocionFk : null
         );
         if (encontrada.pagImagenUrl) {
           setPagImagenUrl(encontrada.pagImagenUrl);
@@ -98,25 +98,20 @@ export default function PaginaDiarioDetalleScreen() {
   useEffect(() => {
     if (!pagina || !esEdicion || emocionesAPI.length === 0) return;
     if (pagina.pagEmocionFk && emocionesAPI.some((e) => e.emoCodigo === pagina.pagEmocionFk)) {
-      setCodigosEmocionSeleccionados((prev) =>
-        prev.length === 0 ? [pagina.pagEmocionFk] : prev
+      setEmocionSeleccionada((prev) =>
+        prev == null ? pagina.pagEmocionFk : prev
       );
     }
   }, [pagina, esEdicion, emocionesAPI]);
 
-  const alternarEmocion = (emoCodigo: number) => {
-    setCodigosEmocionSeleccionados((prev) =>
-      prev.includes(emoCodigo)
-        ? prev.filter((c) => c !== emoCodigo)
-        : [...prev, emoCodigo]
-    );
+  const seleccionarEmocionUnica = (emoCodigo: number) => {
+    setEmocionSeleccionada((prev) => (prev === emoCodigo ? null : emoCodigo));
   };
 
   const emocionSeleccionadaInfo = useMemo(() => {
-    const cod = codigosEmocionSeleccionados[0];
-    if (!cod) return null;
-    return emocionesAPI.find((e) => e.emoCodigo === cod) ?? null;
-  }, [codigosEmocionSeleccionados, emocionesAPI]);
+    if (emocionSeleccionada == null) return null;
+    return emocionesAPI.find((e) => e.emoCodigo === emocionSeleccionada) ?? null;
+  }, [emocionSeleccionada, emocionesAPI]);
 
   /** Info de la emoción de la página para mostrar en lectura (emoji + nombre). */
   const emocionDePagina = useMemo(() => {
@@ -153,8 +148,18 @@ export default function PaginaDiarioDetalleScreen() {
 
   const manejarGuardarEdicion = async () => {
     if (!pagina || !diario?.diaId) return;
+    if (
+      emocionSeleccionada == null ||
+      !emocionesAPI.some((e) => e.emoCodigo === emocionSeleccionada)
+    ) {
+      Alert.alert(
+        "Emoción requerida",
+        "Por favor selecciona una emoción y vuelve a intentarlo."
+      );
+      return;
+    }
     reset();
-    const pagEmocionFk = codigosEmocionSeleccionados[0] ?? 0;
+    const pagEmocionFk = emocionSeleccionada;
 
     const payload = {
       pagTitulo: pagTitulo.trim(),
@@ -351,8 +356,10 @@ export default function PaginaDiarioDetalleScreen() {
         <ModalEmociones
           visible={modalEmocionesVisible}
           onClose={() => setModalEmocionesVisible(false)}
-          seleccionadas={codigosEmocionSeleccionados}
-          onToggle={alternarEmocion}
+          seleccionadas={
+            emocionSeleccionada != null ? [emocionSeleccionada] : []
+          }
+          onToggle={seleccionarEmocionUnica}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

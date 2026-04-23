@@ -1,7 +1,7 @@
-import { useLocalSearchParams, router } from "expo-router";
-import { View, Text, TextInput, StyleSheet, Pressable, ActivityIndicator } from "react-native";
-import { useState, useEffect } from "react";
 import { useEnviarCodViewModel } from "@/src/viewModels/enviarCodViewModels";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 
 export default function VerificarCodigo() {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     },
 
     boton: {
-        backgroundColor: "#4a90e2",
+        backgroundColor: "#085394",
         paddingVertical: 14,
         borderRadius: 10,
         alignItems: "center",
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     reenviarTexto: {
         marginTop: 15,
         textAlign: "center",
-        color: "#4a90e2",
+        color: "#085394",
         fontWeight: "500",
     },
 });

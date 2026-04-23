@@ -47,11 +47,10 @@ export default function PantallaInicioSesion() {
   const handleLogin = async () => {
     Keyboard.dismiss();
     try {
-      const token = await iniciarSesion({
+      await iniciarSesion({
         correoPersonal: correo.trim(),
         password: contraseña,
       });
-      console.log("token", token);
       router.replace("/comprobandoPerfil");
     } catch {
       // El error ya se muestra en el ViewModel
@@ -193,7 +192,7 @@ const styles = StyleSheet.create({
 
   enlaceRegistro: {
     fontSize: 15,
-    color: "#0d5bbf",
+    color: "#085394",
     fontWeight: "600",
   },
 
@@ -237,7 +236,7 @@ const styles = StyleSheet.create({
   },
 
   boton: {
-    backgroundColor: "#0b5ed7",
+    backgroundColor: "#085394",
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: "center",

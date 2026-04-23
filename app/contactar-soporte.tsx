@@ -1,11 +1,11 @@
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Constants from "expo-constants";
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function ContactSupportScreen() {
   const version = Constants.expoConfig?.version;
 
   const handleEmail = () => {
-    Linking.openURL("mailto:soporte@tudominio.com");
+    Linking.openURL("mailto:healthymindsoporte2@gmail.com");
   };
 
   const handleCall = () => {
@@ -14,8 +14,6 @@ export default function ContactSupportScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Contactar soporte</Text>
-
       <Text style={styles.description}>
         Si tienes algún inconveniente o necesitas ayuda, puedes comunicarte con
         nosotros a través de los siguientes canales:
@@ -24,7 +22,8 @@ export default function ContactSupportScreen() {
       <View style={styles.section}>
         <Text style={styles.label}>Correo electrónico</Text>
         <TouchableOpacity style={styles.button} onPress={handleEmail}>
-          <Text style={styles.buttonText}>soporte@tudominio.com</Text>
+          <Text style={styles.buttonText}>healthymindsoporte2@gmail.com
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -54,13 +53,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    
     backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#085394",
   },
   description: {
     fontSize: 14,

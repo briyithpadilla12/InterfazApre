@@ -1,19 +1,18 @@
+import { useRegistroViewModel } from "@/src/viewModels/registro";
+import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
-  Text,
-  TextInput,
-  View,
-  StyleSheet,
+  ActivityIndicator,
   Pressable,
   ScrollView,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableOpacity,
-  
+  View,
 } from "react-native";
 import Collapsible from "react-native-collapsible";
-import { Feather } from "@expo/vector-icons";
-import { useRegistroViewModel } from "@/src/viewModels/registro";
 
 export default function RegistroPerfil() {
 
@@ -138,7 +137,7 @@ export default function RegistroPerfil() {
           {cargando ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.textoBoton}>REGÍSTRAR</Text>
+            <Text style={styles.textoBoton}>Regístrar</Text>
           )}
         </Pressable>
 

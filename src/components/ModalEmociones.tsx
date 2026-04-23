@@ -35,9 +35,6 @@ export default function ModalEmociones({
       <View style={estilos.superposicion}>
         <View style={estilos.contenedorModal}>
           <Text style={estilos.titulo}>¿Cómo te sientes hoy?</Text>
-          <Text style={estilos.subtitulo}>
-            Las mismas emociones que configura el equipo en gestión de emociones.
-          </Text>
 
           {cargando ? (
             <ActivityIndicator size="large" color="#085394" style={{ marginVertical: 40 }} />
@@ -122,12 +119,6 @@ const estilos = StyleSheet.create({
     fontWeight: "700",
     color: "#111",
     textAlign: "center",
-    marginBottom: 8,
-  },
-  subtitulo: {
-    fontSize: 12,
-    color: "#6b7280",
-    textAlign: "center",
     marginBottom: 14,
   },
   lista: {
@@ -203,6 +194,6 @@ const estilos = StyleSheet.create({
   textoBotonReintentar: {
     color: "#085394",
     fontSize: 15,
-    fontWeight: "600",
+     fontWeight: "600",
   },
 });

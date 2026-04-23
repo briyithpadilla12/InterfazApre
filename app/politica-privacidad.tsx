@@ -58,9 +58,6 @@ export default function PoliticaPrivacidadScreen() {
     <ScrollView style={styles.pantalla} contentContainerStyle={styles.contenido}>
       <View style={styles.bloqueEncabezado}>
         <Text style={styles.etiqueta}>Aplicación: Healthy Mind</Text>
-        <Text style={styles.titulo}>
-          Política de privacidad y tratamiento de datos personales
-        </Text>
         <Text style={styles.descripcion}>
           Aquí se explica qué datos pueden recopilarse, cómo se usan y cuáles son
           tus derechos como titular de la información.
@@ -84,6 +81,7 @@ const styles = StyleSheet.create({
   },
   contenido: {
     padding: 16,
+   
     paddingBottom: 30,
   },
   bloqueEncabezado: {
@@ -98,12 +96,6 @@ const styles = StyleSheet.create({
     color: "#085394",
     fontWeight: "600",
     marginBottom: 4,
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#0C3D78",
-    marginBottom: 8,
   },
   descripcion: {
     fontSize: 14,

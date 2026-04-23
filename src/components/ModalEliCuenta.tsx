@@ -1,48 +1,91 @@
-import React from "react";
-import { Modal, StyleSheet, Text, Pressable, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 interface ModalEliCuentaProps {
   visible: boolean;
   onClose: () => void;
+  /** Razón obligatoria en API (RazonEliminacion). */
+  onConfirmar: (razonEliminacion: string) => void | Promise<void>;
+  cargando?: boolean;
 }
 
 export default function ModalEliCuenta({
   visible,
   onClose,
+  onConfirmar,
+  cargando = false,
 }: ModalEliCuentaProps) {
+  const [razon, setRazon] = useState("");
+
+  useEffect(() => {
+    if (visible) setRazon("");
+  }, [visible]);
+
   return (
     <Modal
       animationType="fade"
       transparent
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={cargando ? undefined : onClose}
     >
       <View style={styles.fondo}>
         <View style={styles.modal}>
-
-          <Text style={styles.titulo}>¿Eliminar cuenta?</Text>
+        <Text style={styles.titulo}>¿Eliminar cuenta?</Text>
 
           <Text style={styles.descripcion}>
-            Esta acción no se puede deshacer. Se eliminarán permanentemente:
+            Tu cuenta dejará de estar activa y no podrás iniciar sesión con ella.
+         .
           </Text>
 
           <View style={styles.lista}>
-            <Text style={styles.item}>• Tu perfil y datos personales</Text>
+          <Text style={styles.item}>• Tu perfil y datos personales</Text>
             <Text style={styles.item}>• Historial de conversaciones</Text>
             <Text style={styles.item}>• Registros del diario emocional</Text>
             <Text style={styles.item}>• Todas las configuraciones</Text>
           </View>
 
+          <Text style={styles.labelRazon}>Razón de la eliminación (obligatoria)</Text>
+          <TextInput
+            style={styles.inputRazon}
+            placeholder="Ej.: Ya no usaré la aplicación"
+            placeholderTextColor="#9ca3af"
+            value={razon}
+            onChangeText={setRazon}
+            editable={!cargando}
+            multiline
+            maxLength={500}
+            textAlignVertical="top"
+          />
+
           <View style={styles.contenedorBotones}>
-            <Pressable style={styles.botonCancelar} onPress={onClose}>
+            <Pressable
+              style={[styles.botonCancelar, cargando && styles.botonDeshabilitado]}
+              onPress={onClose}
+              disabled={cargando}
+            >
               <Text style={styles.textoCancelar}>Cancelar</Text>
             </Pressable>
 
-            <Pressable style={styles.botonEliminar} onPress={onClose}>
-              <Text style={styles.textoEliminar}>Eliminar</Text>
+            <Pressable
+              style={[styles.botonEliminar, cargando && styles.botonDeshabilitado]}
+              onPress={() => void onConfirmar(razon.trim())}
+              disabled={cargando}
+            >
+              {cargando ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.textoEliminar}>Eliminar</Text>
+              )}
             </Pressable>
           </View>
-
         </View>
       </View>
     </Modal>
@@ -81,7 +124,27 @@ const styles = StyleSheet.create({
   },
 
   lista: {
-    marginBottom: 20,
+    marginBottom: 14,
+  },
+
+  labelRazon: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+  },
+
+  inputRazon: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: "#111827",
+    minHeight: 72,
+    marginBottom: 18,
+    backgroundColor: "#f9fafb",
   },
 
   item: {
@@ -121,5 +184,9 @@ const styles = StyleSheet.create({
   textoEliminar: {
     color: "#FFFFFF",
     fontWeight: "600",
+  },
+
+  botonDeshabilitado: {
+    opacity: 0.65,
   },
 });

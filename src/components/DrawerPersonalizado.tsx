@@ -1,9 +1,9 @@
-import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useAuth } from "@/src/context/authContext";
+import { Feather } from "@expo/vector-icons";
+import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
+import { router } from "expo-router";
 import { useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 export default function DrawerPersonalizado(props: any) {
   const { logout } = useAuth();
@@ -36,11 +36,8 @@ export default function DrawerPersonalizado(props: any) {
           icon={({ color }) => <Feather name="book" color={color} size={24} />}
           onPress={() => router.push("/diarioScreen")}
         />
-        <DrawerItem
-          label="Citas"
-          icon={({ color }) => <Feather name="book-open" color={color} size={24} />}
-          onPress={() => router.push("/citasScreen")}
-        />
+       
+
         <DrawerItem
           label="Tests"
           icon={({ color }) => <Feather name="clipboard" color={color} size={24} />}
@@ -85,7 +82,7 @@ export default function DrawerPersonalizado(props: any) {
             )
           }
           onPress={cerrarSesion}
-          disabled={cerrandoSesion}
+         
         />
       </View>
     </View>
